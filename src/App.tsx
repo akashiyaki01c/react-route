@@ -1,4 +1,4 @@
-import { Circle, CircleMarker, MapContainer, Polyline } from 'react-leaflet'
+import { Circle, CircleMarker, MapContainer, Marker, Polyline } from 'react-leaflet'
 import { TileLayer } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet/hooks'
 
@@ -7,11 +7,17 @@ import { RoutePoint, TestRouteData } from './model/route';
 import { JSX, useState } from 'react';
 import { fromLatLng, toLatLng } from './model/convert';
 import { getCircleCenterPosition, getCircleBeginPosition, getCircleEndPosition, isClockwise, getShortestArc, normalizeAngle, GetTotalDistance } from './model/distance';
+import { LeafletMouseEvent } from 'leaflet';
 
 function App() {
   // const [route, setRoute] = useState([] as Route[]);
   const [selectedRoute, setSelectedRoute] = useState(TestRouteData);
 
+  const handleDragPoint = (index: number, e: any) => {
+    console.log(e);
+    selectedRoute.points[index].chord = fromLatLng([e.target._latlng.lat, e.target._latlng.lng]);
+    setSelectedRoute({ ...selectedRoute });
+  }
   const handleAddPoint = (lat: number, lng: number) => {
     const [x, y] = fromLatLng([lat, lng]);
     const newPoint: RoutePoint = {
@@ -51,7 +57,7 @@ function App() {
               let posBegin = getCircleBeginPosition(pos0, pos1, pos2, radius);
               let posEnd = getCircleEndPosition(pos0, pos1, pos2, radius);
 
-              const circle = (<Circle key={String(posCenter)} center={toLatLng(posCenter)} radius={radius} fillOpacity={0} weight={1} color="black"></Circle>);
+              const circle = (<Circle key={String(posCenter)} center={toLatLng(posCenter)} radius={radius} fillOpacity={0} weight={0.5} color="black"></Circle>);
               const circleLine = (<Polyline key={String(posCenter)+"_1"} positions={[toLatLng(posBegin), toLatLng(posCenter), toLatLng(posEnd)]} weight={1} color="black"></Polyline>);
 
               {
@@ -110,17 +116,21 @@ function App() {
               toLatLng(getCircleBeginPosition(before.chord, point.chord, after.chord, point.curveRadius))
             ]} color="red"></Polyline>
           })}
-          {selectedRoute.points.map((point) => {
+          {selectedRoute.points.map((point, index) => {
             const [lat, lng] = toLatLng(point.chord);
             return (
-              <CircleMarker
+              <Marker
                 key={point.id}
-                center={[lat, lng]}
-                radius={2}
-                color="black"
-                fillOpacity={0}
-                weight={1}
+                position={[lat, lng]}
+                draggable={true}
+                /* radius={2}
+                color="black" */
+                /* fillOpacity={0} */
+                /* weight={1} */
                 data-xy={point.chord}
+                eventHandlers={{
+                  dragend: (e) => handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
+                }}      
               />
             );
           })}
@@ -158,7 +168,7 @@ function App() {
 }
 
 const MapClickHandler = ({ onAddPoint }: { onAddPoint: (lat: number, lng: number) => void }) => {
-  useMapEvents({
+  const mapEvents = useMapEvents({
     click: (e) => {
       const { lat, lng } = e.latlng; // クリック位置の緯度経度
       onAddPoint(lat, lng);
