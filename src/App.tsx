@@ -1,4 +1,4 @@
-import { Circle, CircleMarker, MapContainer, Marker, Polyline, Popup } from 'react-leaflet'
+import { Circle, MapContainer, Marker, Polyline, Popup } from 'react-leaflet'
 import { TileLayer } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet/hooks'
 
@@ -15,7 +15,7 @@ function App() {
   const [selectedRoute, setSelectedRoute] = useState(TestRouteData);
 
   const MapClickHandler = ({ onAddPoint }: { onAddPoint: (lat: number, lng: number) => void }) => {
-    const mapEvents = useMapEvents({
+    useMapEvents({
       click: (e) => {
         const { lat, lng } = e.latlng; // クリック位置の緯度経度
         onAddPoint(lat, lng);
