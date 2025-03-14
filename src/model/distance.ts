@@ -72,11 +72,115 @@ function getAngle(pos0: [number, number], pos1: [number, number], pos2: [number,
 }
 function getCurveDistance(pos0: [number, number], pos1: [number, number], pos2: [number, number], curveRadius: number) {
 	const angle = getAngle(pos0, pos1, pos2);
-	console.log(angle);
 
 	return curveRadius * (Math.PI - angle);
 }
 
+export function GetCurveBeginDistance(points: RoutePoint[], index: number) {
+	let totalDistance = 0;
+	if (index == 0) {
+		return 0;
+	}
+	if (points.length == 3) {
+		const point = points[0];
+		const nextPoint = points[1];
+		const nextNextPoint = points[2];
+
+		const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+
+		totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
+		return totalDistance;
+	}
+	for (let i = 0; i < index; i++) {
+		if (i == 0) {
+			const point = points[i];
+			const nextPoint = points[i + 1];
+			const nextNextPoint = points[i + 2];
+
+			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
+
+			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+		} else if (i == index-1) {
+			const beforePoint = points[i - 1];
+			const point = points[i];
+			const nextPoint = points[i + 1];
+			const nextNextPoint = points[i + 2];
+
+			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
+			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			totalDistance += getLineDistance(currentCurveEndPoint, nextCurveBeginPoint);
+		} else {
+			const beforePoint = points[i - 1];
+			const point = points[i];
+			const nextPoint = points[i + 1];
+			const nextNextPoint = points[i + 2];
+
+			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
+			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			totalDistance += getLineDistance(currentCurveEndPoint, nextCurveBeginPoint);
+
+			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+		}
+	}
+	return totalDistance;
+}
+
+export function GetCurveEndDistance(points: RoutePoint[], index: number) {
+	let totalDistance = 0;
+	if (index == 0) {
+		return 0;
+	}
+	if (points.length == 3) {
+		const point = points[0];
+		const nextPoint = points[1];
+		const nextNextPoint = points[2];
+
+		const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+
+		totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
+		totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+
+		return totalDistance;
+	}
+	for (let i = 0; i < index; i++) {
+		if (i == 0) {
+			const point = points[i];
+			const nextPoint = points[i + 1];
+			const nextNextPoint = points[i + 2];
+
+			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
+
+			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+		} else if (i == index - 1) {
+			const beforePoint = points[i - 1];
+			const point = points[i];
+			const nextPoint = points[i + 1];
+			const nextNextPoint = points[i + 2];
+
+			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
+			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			totalDistance += getLineDistance(currentCurveEndPoint, nextCurveBeginPoint);
+
+			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+		} else {
+			const beforePoint = points[i - 1];
+			const point = points[i];
+			const nextPoint = points[i + 1];
+			const nextNextPoint = points[i + 2];
+
+			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
+			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			totalDistance += getLineDistance(currentCurveEndPoint, nextCurveBeginPoint);
+
+			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+		}
+	}
+	return totalDistance;
+}
+
+// pointsを結んだ合計距離を求める関数
 export function GetTotalDistance(points: RoutePoint[]) {
 	let totalDistance = 0;
 	if (points.length == 0) return 0;
@@ -108,10 +212,8 @@ export function GetTotalDistance(points: RoutePoint[]) {
 
 			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
 			totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
-			console.log(totalDistance);
 
 			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
-			console.log(totalDistance);
 		} else if (i == points.length-2) {
 			const beforePoint = points[i - 1];
 			const point = points[i];
@@ -119,7 +221,6 @@ export function GetTotalDistance(points: RoutePoint[]) {
 
 			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
 			totalDistance += getLineDistance(currentCurveEndPoint, nextPoint.chord);
-			console.log(totalDistance);
 		} else {
 			const beforePoint = points[i - 1];
 			const point = points[i];
@@ -129,12 +230,54 @@ export function GetTotalDistance(points: RoutePoint[]) {
 			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
 			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
 			totalDistance += getLineDistance(currentCurveEndPoint, nextCurveBeginPoint);
-			console.log(totalDistance);
 
 			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
-			console.log(totalDistance);
 		}
 	}
 
 	return totalDistance;
+}
+
+export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [number, number] {
+	for (let i = 1; i < points.length - 1; i++) {
+		const curveStartDistance = GetCurveBeginDistance(points, i);
+		if (distance < curveStartDistance) {
+			console.log(curveStartDistance, "に存在");
+			// 直線内に存在
+			const beforeEndDistance = GetCurveEndDistance(points, i-1);
+			const proper = (distance - beforeEndDistance) / (curveStartDistance - beforeEndDistance);
+			let pos0 = getCircleEndPosition(points[i-1].chord, points[i].chord, points[i+1].chord, points[i].curveRadius);
+			let pos1 = getCircleBeginPosition(points[i].chord, points[i+1].chord, points[i+2].chord, points[i].curveRadius);
+
+			return [
+				pos0[0] * (1-proper) + pos1[0] * (proper),
+				pos0[1] * (1-proper) + pos1[1] * (proper),
+			];
+		}
+		const curveEndDistance = GetCurveEndDistance(points, i);
+		if (distance < curveEndDistance) {
+			console.log(curveEndDistance, "に存在");
+			// 円弧内に存在
+			const pos0 = points[i].chord, pos1 = points[i+1].chord, pos2 = points[i+2].chord;
+
+			const clockwise = isClockwise(pos0, pos1, pos2);
+			let angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
+
+			const proper = (distance - curveStartDistance) / (curveEndDistance - curveStartDistance);
+
+			let start = normalizeAngle(Math.atan2(pos0[0] - pos1[0], pos0[1] - pos1[1]) + angleOffset);
+			let end = normalizeAngle(Math.atan2(pos2[0] - pos1[0], pos2[1] - pos1[1]) - angleOffset);
+			const arcAngle = getShortestArc(start, end);
+
+			let angle = start + (arcAngle * proper);
+
+			const pos = getCircleCenterPosition(pos0, pos1, pos2, points[i+1].curveRadius);
+			console.log(proper)
+			return [
+				pos[0] + Math.sin(angle) * points[i+1].curveRadius,
+				pos[1] + Math.cos(angle) * points[i+1].curveRadius
+			]
+		}
+	}
+	return [0, 0]
 }

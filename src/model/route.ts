@@ -4,7 +4,7 @@
 export class Route {
 	name = "";
 	points: RoutePoint[] = [];
-	station: Station[] = [];
+	stations: Station[] = [];
 }
 
 /**
@@ -30,7 +30,7 @@ export class Station {
 	/** 駅名 */
 	name = "";
 	/** 距離程 */
-	distance = "";
+	distance = 0;
 }
 
 export const TestRouteData: Route = {
@@ -46,7 +46,7 @@ export const TestRouteData: Route = {
         {id: "8", chord: [-146440, 59594], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
         {id: "9", chord: [-143900, 57109], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint
 	],
-	station: [
-		
+	stations: [
+		{id: "10", name: "2km", distance: 5100} as Station
 	]
 };

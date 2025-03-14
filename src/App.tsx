@@ -1,17 +1,34 @@
-import { Circle, CircleMarker, MapContainer, Marker, Polyline } from 'react-leaflet'
+import { Circle, CircleMarker, MapContainer, Marker, Polyline, Popup } from 'react-leaflet'
 import { TileLayer } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet/hooks'
 
 import './leaflet.css';
-import { RoutePoint, TestRouteData } from './model/route';
+import './App.css';
+
+import { RoutePoint, Station, TestRouteData } from './model/route';
 import { JSX, useState } from 'react';
 import { fromLatLng, toLatLng } from './model/convert';
-import { getCircleCenterPosition, getCircleBeginPosition, getCircleEndPosition, isClockwise, getShortestArc, normalizeAngle, GetTotalDistance } from './model/distance';
-import { LeafletMouseEvent } from 'leaflet';
+import { getCircleCenterPosition, getCircleBeginPosition, getCircleEndPosition, isClockwise, getShortestArc, normalizeAngle, GetTotalDistance, GetCurveBeginDistance, GetCurveEndDistance, GetLatLngFromDistance } from './model/distance';
 
 function App() {
   // const [route, setRoute] = useState([] as Route[]);
   const [selectedRoute, setSelectedRoute] = useState(TestRouteData);
+
+  const MapClickHandler = ({ onAddPoint }: { onAddPoint: (lat: number, lng: number) => void }) => {
+    const mapEvents = useMapEvents({
+      click: (e) => {
+        const { lat, lng } = e.latlng; // クリック位置の緯度経度
+        onAddPoint(lat, lng);
+      },
+      keydown: (e) => {
+        if (e.originalEvent.key == "z") {
+          handleDeletePoint(selectedRoute.points[selectedRoute.points.length-1].id);
+          setSelectedRoute({...selectedRoute});
+        }
+      },
+    });
+    return null;
+  };
 
   const handleDragPoint = (index: number, e: any) => {
     console.log(e);
@@ -130,51 +147,94 @@ function App() {
                 data-xy={point.chord}
                 eventHandlers={{
                   dragend: (e) => handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
-                }}      
+                }}
               />
             );
           })}
+          {selectedRoute.stations.map((station, index) => {
+            const xy = GetLatLngFromDistance(selectedRoute.points, station.distance);
+            if (Number.isNaN(xy[0])) xy[0] = 0;
+            if (Number.isNaN(xy[1])) xy[1] = 0;
+            return <Marker position={toLatLng(xy)}>
+              <Popup>{station.name}</Popup>
+            </Marker>
+          })}
         </MapContainer>
       </div>
-      <div style={{width: "30vw", height: "100vh"}}>
+      <div style={{width: "30vw", height: "100vh", overflow: "scroll"}}>
           <div>
             <button onClick={() => {
               handleDeletePoint(selectedRoute.points[selectedRoute.points.length-1].id);
               setSelectedRoute({...selectedRoute});
             }}>1点削除</button>
-            <button>出力</button>
           </div>
-          {selectedRoute.points.map((point, index) => {
+          <div>{selectedRoute.points.map((point, index) => {
             const isEdge = index == 0 || index == selectedRoute.points.length-1;
-            return <div key={point.id} style={{display: 'flex'}}>
-              <div>座標</div>
-              <div style={{width: "5ric"}}>{point.chord[0].toFixed(0)},</div>
-              <div style={{width: "5ric"}}>{point.chord[1].toFixed(0)}</div>
-              <div>半径</div>
+            return <div key={point.id} style={{display: 'flex'}} className='curve-data'>
               {
                 isEdge 
-                ? <div>edge</div>
-                : <div><input type="number" style={{width: "3ric"}} value={point.curveRadius} onChange={(v) => {
+                ? <div style={{width: "6ric"}}>-</div>
+                : <div style={{width: "6ric"}}><span>半径</span><input type="number" style={{width: "3ric"}} value={point.curveRadius} onChange={(v) => {
                   point.curveRadius = Number.parseInt(v.target.value) || 0;
                   setSelectedRoute({...selectedRoute});
                 }} /></div>
               }
+              <div>
+                <div>{
+                  isEdge 
+                  ? <></>
+                  : <div>BCC: {GetCurveBeginDistance(selectedRoute.points, index).toFixed(2)}</div>
+                }</div>
+                <div>{
+                  isEdge 
+                  ? <></>
+                  : <div>ETC: {GetCurveEndDistance(selectedRoute.points, index).toFixed(2)}</div>
+                }</div>
+              </div>
             </div>
           })}
-          <div>全長{GetTotalDistance(selectedRoute.points)}</div>
+          <div>全長{GetTotalDistance(selectedRoute.points).toFixed(2)}m</div>
+          </div>
+          <hr></hr>
+          <div>
+            <div>
+              <button onClick={() => {
+                selectedRoute.stations.push(new Station());
+                setSelectedRoute({...selectedRoute});
+              }}>駅追加</button>
+            </div>
+            {selectedRoute.stations.map((station, index) => 
+              <div style={{display: "flex"}}>
+                <div>
+                  駅名
+                  <input style={{width: "6ric"}} type="text" value={station.name} onChange={(e) => {station.name = e.target.value; setSelectedRoute({...selectedRoute});}} />
+                </div>
+                <div>
+                  距離程
+                  <input style={{width: "6ric"}} type="number" value={station.distance} onChange={(e) => {station.distance = Number.parseInt(e.target.value) || 0; setSelectedRoute({...selectedRoute});}} />
+                </div>
+                <button onClick={() => {selectedRoute.stations = selectedRoute.stations.filter((_, i) => i !== index); setSelectedRoute({...selectedRoute});}}>削除</button>
+              </div>
+            )}
+          </div>
+          <hr></hr>
+          <div>
+            <div>
+              <button onClick={() => {
+                document.querySelector("textarea")!.value = JSON.stringify(selectedRoute);
+              }}>JSON出力</button>
+              <button onClick={() => {
+                const text = document.querySelector("textarea")!.value || "";
+                try {
+                  setSelectedRoute(JSON.parse(text));
+                } catch {}
+              }}>JSON入力</button>
+            </div>
+            <textarea id='output-json'></textarea>
+          </div>
       </div>
     </div>
   )
 }
-
-const MapClickHandler = ({ onAddPoint }: { onAddPoint: (lat: number, lng: number) => void }) => {
-  const mapEvents = useMapEvents({
-    click: (e) => {
-      const { lat, lng } = e.latlng; // クリック位置の緯度経度
-      onAddPoint(lat, lng);
-    },
-  });
-  return null;
-};
 
 export default App
