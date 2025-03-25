@@ -1,9 +1,4 @@
-import proj4 from "proj4";
 import { latlon2xy, xy2latlon, xyzonejapan } from "./latlonxy";
-
-const WGS84 = "+proj=longlat +datum=WGS84 +no_defs";
-// 5系
-const JPRCS_5 = "+proj=tmerc +lat_0=36 +lon_0=134.3333333333333 +k=0.9999 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs";
 
 const zone = xyzonejapan(5);
 

@@ -157,7 +157,7 @@ function App() {
               />
             );
           })}
-          {selectedRoute.stations.map((station, index) => {
+          {selectedRoute.stations.map((station, _index) => {
             const xy = GetLatLngFromDistance(selectedRoute.points, station.distance);
             if (Number.isNaN(xy[0])) xy[0] = 0;
             if (Number.isNaN(xy[1])) xy[1] = 0;
