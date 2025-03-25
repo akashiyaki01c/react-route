@@ -9,6 +9,7 @@ import { RoutePoint, Station, TestRouteData } from './model/route';
 import { JSX, useState } from 'react';
 import { fromLatLng, toLatLng } from './model/convert';
 import { getCircleCenterPosition, getCircleBeginPosition, getCircleEndPosition, isClockwise, getShortestArc, normalizeAngle, GetTotalDistance, GetCurveBeginDistance, GetCurveEndDistance, GetLatLngFromDistance } from './model/distance';
+import { Icon } from 'leaflet';
 
 function App() {
   // const [route, setRoute] = useState([] as Route[]);
@@ -52,6 +53,11 @@ function App() {
     route.points = route.points.filter((point) => point.id !== id);
     // setSelectedRoute(route);
   }
+
+  const icon = new Icon({
+    iconUrl: "/public/images/point.png",
+    iconSize: [20, 20]
+  });
 
   return (
     <div style={{display: "flex"}}>
@@ -155,7 +161,7 @@ function App() {
             const xy = GetLatLngFromDistance(selectedRoute.points, station.distance);
             if (Number.isNaN(xy[0])) xy[0] = 0;
             if (Number.isNaN(xy[1])) xy[1] = 0;
-            return <Marker position={toLatLng(xy)}>
+            return <Marker position={toLatLng(xy)} icon={icon}>
               <Popup>{station.name}</Popup>
             </Marker>
           })}
@@ -230,7 +236,7 @@ function App() {
                 } catch {}
               }}>JSON入力</button>
             </div>
-            <textarea id='output-json'></textarea>
+            <textarea id='output-json' style={{width: "90%"}}></textarea>
           </div>
       </div>
     </div>

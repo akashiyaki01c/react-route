@@ -100,7 +100,9 @@ export function GetCurveBeginDistance(points: RoutePoint[], index: number) {
 			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
 			totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
 
-			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			if (index !== 1) {
+				totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			}
 		} else if (i == index-1) {
 			const beforePoint = points[i - 1];
 			const point = points[i];
@@ -145,14 +147,18 @@ export function GetCurveEndDistance(points: RoutePoint[], index: number) {
 	}
 	for (let i = 0; i < index; i++) {
 		if (i == 0) {
-			const point = points[i];
-			const nextPoint = points[i + 1];
-			const nextNextPoint = points[i + 2];
+			const point = points[0];
+			const nextPoint = points[1];
+			const nextNextPoint = points[2];
 
 			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
 			totalDistance += getLineDistance(point.chord, nextCurveBeginPoint);
 
 			totalDistance += getCurveDistance(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+
+			if (index === 1) {
+				return totalDistance;
+			}
 		} else if (i == index - 1) {
 			const beforePoint = points[i - 1];
 			const point = points[i];
@@ -239,15 +245,47 @@ export function GetTotalDistance(points: RoutePoint[]) {
 }
 
 export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [number, number] {
-	for (let i = 1; i < points.length - 1; i++) {
+	if (points.length === 0 || points.length === 1) {
+		return [0, 0]
+	}
+	if (points.length == 2) {
+		const totalDistance = getLineDistance(points[0].chord, points[1].chord);
+		const proper = distance / totalDistance;
+		return [
+			points[0].chord[0] * (1-proper) + points[1].chord[0] * (proper),
+			points[0].chord[1] * (1-proper) + points[1].chord[1] * (proper),
+		];
+	}
+	if (points.length === 3) {
+		return [0, 0]
+	}
+	{
+		const curveStartDistance = GetCurveBeginDistance(points, 1);
+		if (distance < curveStartDistance) {
+			const pos0 = points[0].chord;
+			const pos1 = getCircleBeginPosition(points[0].chord, points[1].chord, points[2].chord, points[1].curveRadius);
+			const proper = (distance) / (curveStartDistance);
+
+			return [
+				pos0[0] * (1-proper) + pos1[0] * (proper),
+				pos0[1] * (1-proper) + pos1[1] * (proper),
+			];
+		}
+	}
+	for (let i = 1; i < points.length - 2; i++) {
 		const curveStartDistance = GetCurveBeginDistance(points, i);
 		if (distance < curveStartDistance) {
 			console.log(curveStartDistance, "に存在");
 			// 直線内に存在
 			const beforeEndDistance = GetCurveEndDistance(points, i-1);
 			const proper = (distance - beforeEndDistance) / (curveStartDistance - beforeEndDistance);
-			let pos0 = getCircleEndPosition(points[i-1].chord, points[i].chord, points[i+1].chord, points[i].curveRadius);
-			let pos1 = getCircleBeginPosition(points[i].chord, points[i+1].chord, points[i+2].chord, points[i].curveRadius);
+			let pos0 = [0, 0] as [number, number];
+			if (i === 1) {
+				pos0 = points[0].chord;
+			} else {
+				pos0 = getCircleEndPosition(points[i-2].chord, points[i-1].chord, points[i].chord, points[i-1].curveRadius);
+			}
+			let pos1 = getCircleBeginPosition(points[i-1].chord, points[i].chord, points[i+1].chord, points[i].curveRadius);
 
 			return [
 				pos0[0] * (1-proper) + pos1[0] * (proper),
@@ -258,7 +296,7 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 		if (distance < curveEndDistance) {
 			console.log(curveEndDistance, "に存在");
 			// 円弧内に存在
-			const pos0 = points[i].chord, pos1 = points[i+1].chord, pos2 = points[i+2].chord;
+			const pos0 = points[i-1].chord, pos1 = points[i].chord, pos2 = points[i+1].chord;
 
 			const clockwise = isClockwise(pos0, pos1, pos2);
 			let angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
@@ -271,11 +309,11 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 
 			let angle = start + (arcAngle * proper);
 
-			const pos = getCircleCenterPosition(pos0, pos1, pos2, points[i+1].curveRadius);
+			const pos = getCircleCenterPosition(pos0, pos1, pos2, points[i].curveRadius);
 			console.log(proper)
 			return [
-				pos[0] + Math.sin(angle) * points[i+1].curveRadius,
-				pos[1] + Math.cos(angle) * points[i+1].curveRadius
+				pos[0] + Math.sin(angle) * points[i].curveRadius,
+				pos[1] + Math.cos(angle) * points[i].curveRadius
 			]
 		}
 	}
