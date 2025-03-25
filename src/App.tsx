@@ -54,9 +54,14 @@ function App() {
     // setSelectedRoute(route);
   }
 
-  const icon = new Icon({
-    iconUrl: "/public/images/point.png",
+  const pointIcon = new Icon({
+    iconUrl: "/images/point.png",
     iconSize: [20, 20]
+  });
+  const markerIcon = new Icon({
+    iconUrl: "/images/marker-icon-2x.png",
+    iconSize: [25, 41],
+    iconAnchor: [12.5, 41],
   });
 
   return (
@@ -146,6 +151,7 @@ function App() {
                 key={point.id}
                 position={[lat, lng]}
                 draggable={true}
+                icon={markerIcon}
                 /* radius={2}
                 color="black" */
                 /* fillOpacity={0} */
@@ -161,7 +167,7 @@ function App() {
             const xy = GetLatLngFromDistance(selectedRoute.points, station.distance);
             if (Number.isNaN(xy[0])) xy[0] = 0;
             if (Number.isNaN(xy[1])) xy[1] = 0;
-            return <Marker position={toLatLng(xy)} icon={icon}>
+            return <Marker position={toLatLng(xy)} icon={pointIcon}>
               <Popup>{station.name}</Popup>
             </Marker>
           })}
