@@ -18,7 +18,7 @@
  * @return {number[]} [X座標(m単位), Y座標(m単位), 真北方向角、縮尺係数]の4要素の変数
  */
 export function latlon2xy(latDegree: number, lonDegree: number, zone: number[]): [number, number, number, number] {
-	const _originLat = zone[0]; //原点緯度(度)
+	// const _originLat = zone[0]; //原点緯度(度)
 	const originLon = zone[1]; //原点経度(度)
 	const sOverline = zone[2]; //定数S
 	const aOverline = zone[3]; //定数A
@@ -87,7 +87,7 @@ export function latlon2xy(latDegree: number, lonDegree: number, zone: number[]):
  * @return {number[]} 経度緯度(度単位)を示す1次元配列[緯度,経度]。
  */
 export function xy2latlon(x: number, y: number, zone: number[]): [number, number] {
-	const _originLat = zone[0]; //原点緯度(度)
+	// const _originLat = zone[0]; //原点緯度(度)
 	const originLon = zone[1]; //原点経度(度)
 	const sOverline = zone[2]; //定数S
 	const aOverline = zone[3]; //定数A
@@ -143,7 +143,7 @@ export function xyzone(orgLat: number, orgLon: number): [number, number, number,
 	const scaleFm0 = 0.9999; // mo : 原点における縮尺係数
 	const longerRadius = 6378137.0; //a: GRS80楕円体の長半径。
 	const coefN = 0.0016792203946287445; // N : 1/ (2-楕円扁平率の逆数)
-	const _coef0 = 0.08181919104281579; //coef0 = 2√n/(1+n)
+	// const _coef0 = 0.08181919104281579; //coef0 = 2√n/(1+n)
 	/** A(i) (i=0,1...,5) : 経度緯度から平面直角座標と、その逆変換の両方に使う定数 */
 	const largeA = [1.0000007049454078, -0.0025188297041239312, 2.6435429493240994E-6, -3.4526259073074147E-9, 4.891830424387949E-12, -7.228726045813916E-15];
 	//定数sOverLIneのための行列式 Σ(j=1..5)(Aj*sin(2*j*?0) 
