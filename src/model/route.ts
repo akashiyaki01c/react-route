@@ -2,9 +2,17 @@
  * 一つの路線を表す
  */
 export class Route {
+	id = "";
 	name = "";
 	points: RoutePoint[] = [];
 	stations: Station[] = [];
+
+	constructor(name: string, points: RoutePoint[], stations: Station[]) {
+		this.id = crypto.randomUUID();
+		this.name = name || "";
+		this.points = points || [];
+		this.stations = stations || [];
+	}
 }
 
 /**
@@ -19,6 +27,13 @@ export class RoutePoint {
 	isEdge = false;
 	/** 曲線半径 */
 	curveRadius = 300;
+
+	constructor(chord: [number, number], isEdge: boolean, curveRadius: number) {
+		this.id = crypto.randomUUID();
+		this.chord = chord || [0, 0];
+		this.isEdge = isEdge || false;
+		this.curveRadius = curveRadius || 300;
+	}
 }
 
 /**
@@ -31,22 +46,16 @@ export class Station {
 	name = "";
 	/** 距離程 */
 	distance = 0;
+
+	constructor(name: string, distance: number) {
+		this.id = crypto.randomUUID();
+		this.name = name || "";
+		this.distance = distance || 0;
+	}
 }
 
-export const TestRouteData: Route = {
-	name: "テスト",
-	points: [
-		{id: "1", chord: [-148192, 63301], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "2", chord: [-147376, 58298], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "3", chord: [-147983, 56940], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "4", chord: [-147316, 56075], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "5", chord: [-146992, 57076], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "6", chord: [-146079, 56033], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "7", chord: [-145082, 57100], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "8", chord: [-146440, 59594], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint,
-        {id: "9", chord: [-143900, 57109], isEdge: false, curveRadius: 200, isHover: false } as RoutePoint
-	],
-	stations: [
-		{id: "10", name: "2km", distance: 5100} as Station
-	]
-};
+export const TestRouteData: Route = new Route(
+	"テスト",
+	[],
+	[]
+);
