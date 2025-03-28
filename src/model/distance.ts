@@ -107,10 +107,9 @@ export function GetCurveBeginDistance(points: RoutePoint[], index: number) {
 			const beforePoint = points[i - 1];
 			const point = points[i];
 			const nextPoint = points[i + 1];
-			const nextNextPoint = points[i + 2];
 
 			const currentCurveEndPoint = getCircleEndPosition(beforePoint.chord, point.chord, nextPoint.chord, point.curveRadius);
-			const nextCurveBeginPoint = getCircleBeginPosition(point.chord, nextPoint.chord, nextNextPoint.chord, nextPoint.curveRadius);
+			const nextCurveBeginPoint = nextPoint.chord;
 			totalDistance += getLineDistance(currentCurveEndPoint, nextCurveBeginPoint);
 		} else {
 			const beforePoint = points[i - 1];
@@ -272,11 +271,10 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 			];
 		}
 	}
-	for (let i = 1; i < points.length - 2; i++) {
-		const curveStartDistance = GetCurveBeginDistance(points, i);
+	for (let i = 1; i < points.length; i++) {
+		let curveStartDistance: number;
+		curveStartDistance = GetCurveBeginDistance(points, i);
 		if (distance < curveStartDistance) {
-			console.log(curveStartDistance, "に存在");
-			// 直線内に存在
 			const beforeEndDistance = GetCurveEndDistance(points, i-1);
 			const proper = (distance - beforeEndDistance) / (curveStartDistance - beforeEndDistance);
 			let pos0 = [0, 0] as [number, number];
@@ -285,17 +283,23 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 			} else {
 				pos0 = getCircleEndPosition(points[i-2].chord, points[i-1].chord, points[i].chord, points[i-1].curveRadius);
 			}
-			let pos1 = getCircleBeginPosition(points[i-1].chord, points[i].chord, points[i+1].chord, points[i].curveRadius);
+			let pos1 = [0, 0] as [number, number];
+			if (i === points.length - 1) {
+				pos1 = points[i].chord;
+			} else {
+				pos1 = getCircleBeginPosition(points[i-1].chord, points[i].chord, points[i+1].chord, points[i].curveRadius);
+			}
 
 			return [
 				pos0[0] * (1-proper) + pos1[0] * (proper),
 				pos0[1] * (1-proper) + pos1[1] * (proper),
 			];
 		}
+		if (i === points.length - 1) {
+			return [0, 0]
+		}
 		const curveEndDistance = GetCurveEndDistance(points, i);
 		if (distance < curveEndDistance) {
-			console.log(curveEndDistance, "に存在");
-			// 円弧内に存在
 			const pos0 = points[i-1].chord, pos1 = points[i].chord, pos2 = points[i+1].chord;
 
 			const clockwise = isClockwise(pos0, pos1, pos2);

@@ -10,6 +10,8 @@ import { JSX, useState } from 'react';
 import { fromLatLng, toLatLng } from './model/convert';
 import { getCircleCenterPosition, getCircleBeginPosition, getCircleEndPosition, isClockwise, getShortestArc, normalizeAngle, GetTotalDistance, GetCurveBeginDistance, GetCurveEndDistance, GetLatLngFromDistance } from './model/distance';
 import { Icon } from 'leaflet';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 
 function App() {
   const [routes, setRoute] = useState([new Route("新規路線", [], [])] as Route[]);
@@ -58,14 +60,15 @@ function App() {
     iconUrl: "/images/point.png",
     iconSize: [20, 20]
   });
-  const markerIcon = new Icon({
+  /* const markerIcon = new Icon({
     iconUrl: "/images/marker-icon-2x.png",
     iconSize: [25, 41],
     iconAnchor: [12.5, 41],
-  });
+  }); */
 
   return (
     <div style={{display: "flex"}}>
+      {/* 地図画面 */}
       <div style={{ width: "70vw", height: "100vh" }}>
         <MapContainer center={[35, 135]} zoom={10} style={{ height: "100%" }}>
           <TileLayer
@@ -134,7 +137,7 @@ function App() {
             const before = route.points[i-1];
             const after = route.points[i+1];
 
-            return <Polyline key={`${route.id}_line5`} positions={[
+            return <Polyline key={`${point.id}_line5`} positions={[
               toLatLng(getCircleEndPosition(before2.chord, before.chord, point.chord, before.curveRadius)),
               toLatLng(getCircleBeginPosition(before.chord, point.chord, after.chord, point.curveRadius))
             ]} color="red"></Polyline>
@@ -226,7 +229,7 @@ function App() {
                 key={point.id}
                 position={[lat, lng]}
                 draggable={true}
-                icon={markerIcon}
+                /* icon={markerIcon} */
                 data-xy={point.chord}
                 eventHandlers={{
                   dragend: (e) => handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
@@ -246,97 +249,129 @@ function App() {
           })}
         </MapContainer>
       </div>
+      {/* プロパティ画面 */}
       <div style={{width: "30vw", height: "100vh", overflow: "scroll"}}>
-        <div>
-          <button onClick={() => {
-            routes.push(new Route("新規路線", [], []));
-            setRoute(routes);
-            setSelectedRoute(routes[routes.length-1]);
-          }}>路線追加</button>
+        <div style={{height: "5%", display: 'flex', alignItems: 'center', justifyContent: "center"}}>
+          <span style={{fontWeight: "bold"}}>線路図作成支援ツール</span>
         </div>
-        <div>{routes.map((v) => <div style={{display: "flex", backgroundColor: (v.id === selectedRoute.id) ? "red" : ""}}>
-          <input style={{width: "6ric"}} type="text" value={v.name} onChange={(e) => {v.name = e.target.value; setRoute([...routes]);}} />
-          <button onClick={() => {
-            setRoute(routes.filter((v1) => v.id !== v1.id));
-            setSelectedRoute(routes[routes.length-1]);
-          }}>削除</button>
-          <button onClick={() => {
-            const currentIndex = routes.map((v, i) => v.id === selectedRoute.id ? i : null).find(v => v != null) || 0;
-            routes[currentIndex] = selectedRoute;
-            setRoute([...routes]);
-            setSelectedRoute(routes.find(v1 => v.id === v1.id) || routes[0]);
-          }}>選択</button>
-        </div>)}</div>
-        <hr />
-        <div>
-          <button onClick={() => {
-            handleDeletePoint(selectedRoute.points[selectedRoute.points.length-1].id);
-            setSelectedRoute({...selectedRoute});
-          }}>1点削除</button>
-        </div>
-        <div>{selectedRoute.points.map((point, index) => {
-          const isEdge = index == 0 || index == selectedRoute.points.length-1;
-          return <div key={point.id} style={{display: 'flex'}} className='curve-data'>
-            {
-              isEdge 
-              ? <div style={{width: "6ric"}}>-</div>
-              : <div style={{width: "6ric"}}><span>半径</span><input type="number" style={{width: "3ric"}} value={point.curveRadius} onChange={(v) => {
-                point.curveRadius = Number.parseInt(v.target.value) || 0;
-                setSelectedRoute({...selectedRoute});
-              }} /></div>
-            }
-            <div>
-              <div>{
-                isEdge 
-                ? <></>
-                : <div>BCC: {GetCurveBeginDistance(selectedRoute.points, index).toFixed(2)}</div>
-              }</div>
-              <div>{
-                isEdge 
-                ? <></>
-                : <div>ETC: {GetCurveEndDistance(selectedRoute.points, index).toFixed(2)}</div>
-              }</div>
+        <div style={{height: "25%"}}>
+          <div style={{height: "20%", display: "flex"}}>
+            <div style={{height: "100%", display: "flex", alignItems: "center"}}>
+              <span style={{marginInline: "1ric", fontWeight: "bold"}}>路線管理</span>
             </div>
+            <Button variant="outlined" onClick={() => {
+              const currentIndex = routes.map((v, i) => v.id === selectedRoute.id ? i : null).find(v => v != null) || 0;
+              routes[currentIndex] = selectedRoute;
+              routes.push(new Route("新規路線", [], []));
+              setRoute(routes);
+              setSelectedRoute(routes[routes.length-1]);
+            }}>路線追加</Button>
           </div>
-        })}
-        <div>全長{GetTotalDistance(selectedRoute.points).toFixed(2)}m</div>
+          <div style={{height: "70%", overflow: "scroll", border: "1px black solid", padding: "2.5%"}}>
+            {routes.map((v) => <div key={v.id} style={{display: "flex", backgroundColor: (v.id === selectedRoute.id) ? "#ddeeff" : ""}}>
+              <TextField style={{width: "6ric", flex: "1"}} onChange={(e) => {v.name = e.target.value; setRoute([...routes]);}} value={v.name}></TextField>
+              <Button variant="outlined" onClick={() => {
+                setRoute(routes.filter((v1) => v.id !== v1.id));
+                setSelectedRoute(routes[routes.length-1]);
+              }}>削除</Button>
+              <Button variant="contained" onClick={() => {
+                const currentIndex = routes.map((v, i) => v.id === selectedRoute.id ? i : null).find(v => v != null) || 0;
+                routes[currentIndex] = selectedRoute;
+                setRoute([...routes]);
+                setSelectedRoute(routes.find(v1 => v.id === v1.id) || routes[0]);
+              }}>選択</Button>
+            </div>)}
+          </div>
         </div>
-        <hr></hr>
-        <div>
-          <div>
-            <button onClick={() => {
+        <div style={{height: "25%"}}>
+          <div style={{height: "20%", display: "flex"}}>
+            <div style={{height: "100%", display: "flex", alignItems: "center"}}>
+              <span style={{marginInline: "1ric", fontWeight: "bold"}}>経点管理</span>
+            </div>
+            <Button variant="outlined" onClick={() => {
+              if (selectedRoute.points.length === 0) {
+                return;
+              }
+              handleDeletePoint(selectedRoute.points[selectedRoute.points.length-1].id);
+              setSelectedRoute({...selectedRoute});
+            }}>1点削除</Button>
+            <Button variant="outlined" onClick={() => {
+              if (selectedRoute.points.length === 0) {
+                return;
+              }
+              selectedRoute.points = [];
+              setSelectedRoute({...selectedRoute});
+            }}>全削除</Button>
+          </div>
+          <div style={{height: "70%", overflowY: "scroll", border: "1px black solid", padding: "2.5%"}}>{selectedRoute.points.map((point, index) => {
+            const isEdge = index == 0 || index == selectedRoute.points.length-1;
+            return <div key={point.id} style={{display: 'flex'}} className='curve-data'>
+              {
+                isEdge 
+                ? <div style={{width: "6ric"}}>-</div>
+                : <div style={{width: "6ric"}}><span>半径</span><input type="number" style={{width: "3ric"}} value={point.curveRadius} onChange={(v) => {
+                  point.curveRadius = Number.parseInt(v.target.value) || 0;
+                  setSelectedRoute({...selectedRoute});
+                }} /></div>
+              }
+              <div>
+                <div>{
+                  isEdge 
+                  ? <></>
+                  : <div>BC: {GetCurveBeginDistance(selectedRoute.points, index).toFixed(2)}</div>
+                }</div>
+                <div>{
+                  isEdge 
+                  ? <></>
+                  : <div>EC: {GetCurveEndDistance(selectedRoute.points, index).toFixed(2)}</div>
+                }</div>
+              </div>
+            </div>
+          })}
+          <div>全長{GetTotalDistance(selectedRoute.points).toFixed(2)}m</div>
+          </div>
+        </div>
+        <div style={{height: "25%"}}>
+          <div style={{height: "20%", display: "flex"}}>
+            <div style={{height: "100%", display: "flex", alignItems: "center"}}>
+              <span style={{marginInline: "1ric", fontWeight: "bold"}}>駅管理</span>
+            </div>
+            <Button variant="outlined" onClick={() => {
               selectedRoute.stations.push(new Station("", 0));
               setSelectedRoute({...selectedRoute});
-            }}>駅追加</button>
+            }}>駅追加</Button>
           </div>
-          {selectedRoute.stations.map((station, index) => 
-            <div style={{display: "flex"}}>
-              <div>
-                駅名
-                <input style={{width: "6ric"}} type="text" value={station.name} onChange={(e) => {station.name = e.target.value; setSelectedRoute({...selectedRoute});}} />
+          <div style={{height: "70%", overflowY: "scroll", border: "1px black solid", padding: "2.5%"}}>
+            {selectedRoute.stations.map((station, index) => 
+              <div key={station.id} style={{display: "flex"}}>
+                <div>
+                  駅名
+                  <input style={{width: "6ric"}} type="text" value={station.name} onChange={(e) => {station.name = e.target.value; setSelectedRoute({...selectedRoute});}} />
+                </div>
+                <div>
+                  距離程
+                  <input style={{width: "6ric"}} type="number" value={station.distance} onChange={(e) => {station.distance = Number.parseInt(e.target.value) || 0; setSelectedRoute({...selectedRoute});}} />
+                </div>
+                <button onClick={() => {selectedRoute.stations = selectedRoute.stations.filter((_, i) => i !== index); setSelectedRoute({...selectedRoute});}}>削除</button>
               </div>
-              <div>
-                距離程
-                <input style={{width: "6ric"}} type="number" value={station.distance} onChange={(e) => {station.distance = Number.parseInt(e.target.value) || 0; setSelectedRoute({...selectedRoute});}} />
-              </div>
-              <button onClick={() => {selectedRoute.stations = selectedRoute.stations.filter((_, i) => i !== index); setSelectedRoute({...selectedRoute});}}>削除</button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-        <hr></hr>
-        <div>
+        <div style={{height: "20%", display: "flex", flexFlow: "column"}}>
           <div>
-            <button onClick={() => {
+            <Button variant="contained" onClick={() => {
               document.querySelector("textarea")!.value = JSON.stringify(routes);
-            }}>JSON出力</button>
-            <button onClick={() => {
+            }}>JSON出力</Button>
+            <Button variant="outlined" onClick={() => {
               const text = document.querySelector("textarea")!.value || "";
               try {
-                setRoute(JSON.parse(text));
+                const obj = JSON.parse(text);
+                setSelectedRoute(obj[0]);
+                setRoute(obj);
               } catch {}
-            }}>JSON入力</button>
+            }}>JSON入力</Button>
           </div>
-          <textarea id='output-json' style={{width: "90%"}}></textarea>
+          <textarea id='output-json' style={{flex: "1"}}></textarea>
         </div>
       </div>
     </div>
