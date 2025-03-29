@@ -1,54 +1,29 @@
-# React + TypeScript + Vite
+# 線路図作成支援ツール
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 概要
 
-Currently, two official plugins are available:
+折れ線を結んで路線を作成するツールです。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+デプロイ先サイト→ [train-track-drawer.deno.dev](https://train-track-drawer.deno.dev/)
 
-## Expanding the ESLint configuration
+## 機能
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* 路線管理機能
+  * 路線の追加/削除/選択を行うことができます。
+  * 路線名の編集を行うことができます。
+* 経点管理機能
+  * 路線が経由する地点の編集を行うことができます。
+  * 地図上でクリックすると経点追加ができます。
+  * 地図上でマーカーをドラッグすると経点移動ができます。
+* 駅管理機能
+  * 駅の追加/削除/選択を行うことができます。
+  * 駅名/距離程の編集を行うことができます。
+* データ入出力機能
+  * `JSON出力`ボタンを押すと、現在編集しているデータをテキストボックスに出力します。
+  * テキストボックスにデータを入力した状態で`JSON入力`を押すと、JSONファイルからデータを読み込みます。
+  * **データはリロードで消えます。必ずJSON出力を行いデータの保存をするように注意してください。**
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## 既知のバグ
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+* 駅の距離程に合わせた描画が不正確
+* 路線管理機能で路線名を編集した後別路線を選択すると路線名が消える
