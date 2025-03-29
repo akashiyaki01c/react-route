@@ -27,3 +27,11 @@
 
 * 駅の距離程に合わせた描画が不正確
 * 路線管理機能で路線名を編集した後別路線を選択すると路線名が消える
+
+## 使用ライブラリ
+
+### latlonxy.js (MIT License)
+
+> Copyright (c) 2024 FOUR 4to6
+
+[GitHub repo](https://github.com/four4to6/latlonxy_js)
