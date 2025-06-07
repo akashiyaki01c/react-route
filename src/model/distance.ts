@@ -76,6 +76,7 @@ function getCurveDistance(pos0: [number, number], pos1: [number, number], pos2: 
 	return curveRadius * (Math.PI - angle);
 }
 
+// カーブの始点距離を求める関数
 export function GetCurveBeginDistance(points: RoutePoint[], index: number) {
 	let totalDistance = 0;
 	if (index == 0) {
@@ -127,6 +128,7 @@ export function GetCurveBeginDistance(points: RoutePoint[], index: number) {
 	return totalDistance;
 }
 
+// カーブの終端距離を求める関数
 export function GetCurveEndDistance(points: RoutePoint[], index: number) {
 	let totalDistance = 0;
 	if (index == 0) {
@@ -243,6 +245,7 @@ export function GetTotalDistance(points: RoutePoint[]) {
 	return totalDistance;
 }
 
+// 距離から座標を計算する関数
 export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [number, number] {
 	if (points.length === 0 || points.length === 1) {
 		return [0, 0]
@@ -258,6 +261,7 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 	if (points.length === 3) {
 		return [0, 0]
 	}
+	// 最初の曲線以前の場合
 	{
 		const curveStartDistance = GetCurveBeginDistance(points, 1);
 		if (distance < curveStartDistance) {
