@@ -363,6 +363,9 @@ function App() {
               document.querySelector("textarea")!.value = JSON.stringify(routes);
             }}>JSON出力</Button>
             <Button variant="outlined" onClick={() => {
+              if (!window.confirm("現在入力されているデータは全て削除されます。続行しますか？")) {
+                return;
+              }
               const text = document.querySelector("textarea")!.value || "";
               try {
                 const obj = JSON.parse(text);
