@@ -340,6 +340,10 @@ function App() {
               selectedRoute.stations.push(new Station("", 0));
               setSelectedRoute({...selectedRoute});
             }}>駅追加</Button>
+            <Button variant="outlined" onClick={() => {
+              selectedRoute.stations = selectedRoute.stations.sort((a, b) => a.distance - b.distance);
+              setSelectedRoute({...selectedRoute});
+            }}>駅ソート</Button>
           </div>
           <div style={{height: "70%", overflowY: "scroll", border: "1px black solid", padding: "2.5%"}}>
             {selectedRoute.stations.map((station, index) => 
