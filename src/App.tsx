@@ -366,6 +366,65 @@ function App() {
             <Button variant="contained" onClick={() => {
               document.querySelector("textarea")!.value = JSON.stringify(routes);
             }}>JSON出力</Button>
+            <Button variant="contained" onClick={() => {
+              document.querySelector("textarea")!.value = 
+                JSON.stringify(selectedRoute.points.map((point, index) => {
+                  const isEdge = index == 0 || index == selectedRoute.points.length-1;
+                  if (isEdge) {
+                    return null;
+                  }
+                  const bc = GetCurveBeginDistance(selectedRoute.points, index);
+                  const ec = GetCurveEndDistance(selectedRoute.points, index);
+                  const radius = point.curveRadius;
+
+                  return {start: Math.floor(bc), end: Math.floor(ec), direction: "left", radius, speed: 0}
+                }).filter(v => v !== null));
+            }}>曲線出力</Button>
+            <Button variant="contained" onClick={() => {
+              document.querySelector("textarea")!.value = 
+                JSON.stringify(selectedRoute.points.map((point, index) => {
+                  const isEdge = index == 0 || index == selectedRoute.points.length-1;
+                  if (isEdge) {
+                    return null;
+                  }
+                  const bc = GetCurveBeginDistance(selectedRoute.points, index);
+                  const ec = GetCurveEndDistance(selectedRoute.points, index);
+                  const radius = point.curveRadius;
+
+                  let limitSpeed = 0;
+                  if      (radius <  70) { limitSpeed = 25; }
+                  else if (radius <  90) { limitSpeed = 30; }
+                  else if (radius < 110) { limitSpeed = 35; }
+                  else if (radius < 130) { limitSpeed = 40; }
+                  else if (radius < 150) { limitSpeed = 45; }
+                  else if (radius < 170) { limitSpeed = 50; }
+                  else if (radius < 200) { limitSpeed = 55; }
+                  else if (radius < 220) { limitSpeed = 60; }
+                  else if (radius < 240) { limitSpeed = 65; }
+                  else if (radius < 260) { limitSpeed = 70; }
+                  else if (radius < 280) { limitSpeed = 75; }
+                  else if (radius < 300) { limitSpeed = 80; }
+                  else if (radius < 340) { limitSpeed = 85; }
+                  else if (radius < 380) { limitSpeed = 90; }
+                  else if (radius < 420) { limitSpeed = 95; }
+                  else if (radius < 480) { limitSpeed = 100; }
+                  else if (radius < 520) { limitSpeed = 105; }
+                  else if (radius < 560) { limitSpeed = 110; }
+                  else if (radius < 620) { limitSpeed = 115; }
+
+                  if (limitSpeed === 0) { return null; }
+
+                  return {start: Math.floor(bc), end: Math.floor(ec), speed: limitSpeed}
+                }).filter(v => v !== null));
+            }}>速度制限出力</Button>
+            <Button variant="contained" onClick={() => {
+              document.querySelector("textarea")!.value = 
+                JSON.stringify(selectedRoute.stations.map((station) => {
+                  if (station.distance === null)
+                    return null;
+                  return {position: station.distance, stationName: station.name, trackName: "", isPass: false}
+                }).filter(v => v !== null));
+            }}>駅出力</Button>
             <Button variant="outlined" onClick={() => {
               if (!window.confirm("現在入力されているデータは全て削除されます。続行しますか？")) {
                 return;
@@ -375,7 +434,9 @@ function App() {
                 const obj = JSON.parse(text);
                 setSelectedRoute(obj[0]);
                 setRoute(obj);
-              } catch {}
+              } catch {
+                /*  */
+              }
             }}>JSON入力</Button>
           </div>
           <textarea id='output-json' style={{flex: "1"}}></textarea>
