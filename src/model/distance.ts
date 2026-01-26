@@ -2,11 +2,11 @@ import { RoutePoint } from "./route";
 
 // 曲線の中心座標を求める関数
 export function getCircleCenterPosition(pos0: [number, number], pos1: [number, number], pos2: [number, number], radius: number): [number, number] {
-	let angle0 = Math.atan2(pos1[0] - pos0[0], pos1[1] - pos0[1]) - 90 * Math.PI / 180;
-	let angle1 = Math.atan2(pos1[0] - pos2[0], pos1[1] - pos2[1]) - 90 * Math.PI / 180;
-	let anglehalf = ((angle0 + angle1) / 2) % 360;
+	const angle0 = Math.atan2(pos1[0] - pos0[0], pos1[1] - pos0[1]) - 90 * Math.PI / 180;
+	const angle1 = Math.atan2(pos1[0] - pos2[0], pos1[1] - pos2[1]) - 90 * Math.PI / 180;
+	const anglehalf = ((angle0 + angle1) / 2) % 360;
 
-	let length = 1 / Math.sin(Math.abs(angle1 - angle0) / 2) * radius;
+	const length = 1 / Math.sin(Math.abs(angle1 - angle0) / 2) * radius;
 
 	let addx = length * Math.cos(anglehalf);
 	let addy = length * Math.sin(anglehalf);
@@ -23,10 +23,10 @@ export function getCircleCenterPosition(pos0: [number, number], pos1: [number, n
 export function getCircleBeginPosition(pos0: [number, number], pos1: [number, number], pos2: [number, number], radius: number): [number, number] {
 	const center = getCircleCenterPosition(pos0, pos1, pos2, radius);
 	const clockwise = isClockwise(pos0, pos1, pos2);
-	let angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
-	let start = normalizeAngle(Math.atan2(pos0[0] - pos1[0], pos0[1] - pos1[1]) + angleOffset);
-	let addx = Math.sin(start) * radius;
-	let addy = Math.cos(start) * radius;
+	const angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
+	const start = normalizeAngle(Math.atan2(pos0[0] - pos1[0], pos0[1] - pos1[1]) + angleOffset);
+	const addx = Math.sin(start) * radius;
+	const addy = Math.cos(start) * radius;
 
 	return [center[0] + addx, center[1] + addy];
 }
@@ -35,10 +35,10 @@ export function getCircleBeginPosition(pos0: [number, number], pos1: [number, nu
 export function getCircleEndPosition(pos0: [number, number], pos1: [number, number], pos2: [number, number], radius: number): [number, number] {
 	const center = getCircleCenterPosition(pos0, pos1, pos2, radius);
 	const clockwise = isClockwise(pos0, pos1, pos2);
-	let angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
-	let start = normalizeAngle(Math.atan2(pos2[0] - pos1[0], pos2[1] - pos1[1]) - angleOffset);
-	let addx = Math.sin(start) * radius;
-	let addy = Math.cos(start) * radius;
+	const angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
+	const start = normalizeAngle(Math.atan2(pos2[0] - pos1[0], pos2[1] - pos1[1]) - angleOffset);
+	const addx = Math.sin(start) * radius;
+	const addy = Math.cos(start) * radius;
 	return [center[0] + addx, center[1] + addy];
 }
 export function normalizeAngle(angle: number): number {
@@ -276,8 +276,7 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 		}
 	}
 	for (let i = 1; i < points.length; i++) {
-		let curveStartDistance: number;
-		curveStartDistance = GetCurveBeginDistance(points, i);
+		const curveStartDistance = GetCurveBeginDistance(points, i);
 		if (distance < curveStartDistance) {
 			const beforeEndDistance = GetCurveEndDistance(points, i-1);
 			const proper = (distance - beforeEndDistance) / (curveStartDistance - beforeEndDistance);
@@ -307,15 +306,15 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 			const pos0 = points[i-1].chord, pos1 = points[i].chord, pos2 = points[i+1].chord;
 
 			const clockwise = isClockwise(pos0, pos1, pos2);
-			let angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
+			const angleOffset = clockwise ? Math.PI / 2 : -Math.PI / 2;
 
 			const proper = (distance - curveStartDistance) / (curveEndDistance - curveStartDistance);
 
-			let start = normalizeAngle(Math.atan2(pos0[0] - pos1[0], pos0[1] - pos1[1]) + angleOffset);
-			let end = normalizeAngle(Math.atan2(pos2[0] - pos1[0], pos2[1] - pos1[1]) - angleOffset);
+			const start = normalizeAngle(Math.atan2(pos0[0] - pos1[0], pos0[1] - pos1[1]) + angleOffset);
+			const end = normalizeAngle(Math.atan2(pos2[0] - pos1[0], pos2[1] - pos1[1]) - angleOffset);
 			const arcAngle = getShortestArc(start, end);
 
-			let angle = start + (arcAngle * proper);
+			const angle = start + (arcAngle * proper);
 
 			const pos = getCircleCenterPosition(pos0, pos1, pos2, points[i].curveRadius);
 			console.log(proper)

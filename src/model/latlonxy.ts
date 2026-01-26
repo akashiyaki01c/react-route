@@ -1,3 +1,5 @@
+/* eslint-disable no-loss-of-precision */
+/* eslint-disable no-irregular-whitespace */
 /**
  * latlonxy.js
  * 日本における世界測地系(=日本測地系2011)での、緯度経度と平面直角座標(XY)の双方向変換を行うJavaScript。
@@ -54,18 +56,18 @@ export function latlon2xy(latDegree: number, lonDegree: number, zone: number[]):
 	let sigma = 0; //σ (sigma) = 1 + Σ{j=1..5} 2jα(j) * cos(2jξ') * cosh(2j η')
 	let tau = 0; //τ (tau) =  Σ{j=1..5} 2jα(j) * cos(2jξ') * cosh(2j η')
 	for (let j = 1; j <= 5; j++) {
-		let j2xiDash = 2 * j * xiDash; //2j ξ'		
-		let j2etaDash = 2 * j * etaDash; //// 2j η'
+		const j2xiDash = 2 * j * xiDash; //2j ξ'		
+		const j2etaDash = 2 * j * etaDash; //// 2j η'
 		determX += alpha[j] * Math.sin(j2xiDash) * Math.cosh(j2etaDash);
 		determY += alpha[j] * Math.cos(j2xiDash) * Math.sinh(j2etaDash);
-		let j2Alpha = 2 * j * alpha[j]; // 2jα(j)
+		const j2Alpha = 2 * j * alpha[j]; // 2jα(j)
 		//σ (sigma) = 1 + Σ{j=1..5}( 2jα(j) * cos(2jξ') * cosh(2j η')
 		sigma += j2Alpha * Math.cos(j2xiDash) * Math.cosh(j2etaDash);
 		//τ (tau) =  Σ{j=1..5}( 2jα(j) * cos(2jξ') * cosh(2j η')
 		tau += j2Alpha * Math.sin(j2xiDash) * Math.sinh(j2etaDash);
 	}
 	sigma = sigma + 1;
-	let result = [0, 0, 0, 0] as [number, number, number, number]; // [x,y,真北方向角,縮尺係数]
+	const result = [0, 0, 0, 0] as [number, number, number, number]; // [x,y,真北方向角,縮尺係数]
 	result[0] = aOverline * (xiDash + determX) - sOverline; //x
 	result[1] = aOverline * (etaDash + determY); //y
 	//γ (gamma 子午線収差角= -真北方向角)
@@ -120,12 +122,12 @@ export function xy2latlon(x: number, y: number, zone: number[]): [number, number
 	for (let j = 1; j <= 6; j++) {
 		sigmaLat += delta[j] * Math.sin(2.0 * j * chi); //Σ{j=1..5}( δjsin(2jχ) )
 	}
-	let latlon = [0, 0] as [number, number];
+	const latlon = [0, 0] as [number, number];
 	///緯度(radian単位)  ? = χ+ sigmaLat
-	let latInRadian = chi + sigmaLat;
+	const latInRadian = chi + sigmaLat;
 	latlon[0] = toDegree(latInRadian);
 	//経度(radian単位) λ = λ0+tan?1(sinh(η′)/cos(ξ′))
-	let lonInRadian = toRadian(originLon) + (Math.atan(Math.sinh(etaDash) / Math.cos(xiDash)));
+	const lonInRadian = toRadian(originLon) + (Math.atan(Math.sinh(etaDash) / Math.cos(xiDash)));
 	latlon[1] = toDegree(lonInRadian);
 	return latlon;
 }
