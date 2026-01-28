@@ -125,9 +125,9 @@ function App() {
                 url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
             </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Open Street Map 2" checked>
+            <LayersControl.BaseLayer name="Open Street Map (白色)">
               <TileLayer
-                attribution='© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                attribution='Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.'
                 url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
               />
             </LayersControl.BaseLayer>
