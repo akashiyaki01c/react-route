@@ -117,116 +117,133 @@ function App() {
       {/* 地図画面 */}
       <div style={{ width: "70vw", height: "100vh" }}>
         <MapContainer center={[35, 135]} zoom={10} style={{ height: "100%" }}>
-          <TileLayer
-            attribution="<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
-            url="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
-          />
           <MapClickHandler onAddPoint={handleAddPoint} />
-          <LayersControl />
+          <LayersControl>
+            <LayersControl.BaseLayer name="Open Street Map" checked>
+              <TileLayer
+                attribution='© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Open Street Map 2" checked>
+              <TileLayer
+                attribution='© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="地理院地図">
+              <TileLayer
+                attribution="<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
+                url="https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
 
-          <LayerGroup>
-            {/* 一般路線描画 */}
-            <RouteView routes={routes} selectedRoute={selectedRoute} />
-          </LayerGroup>
-
-          <LayerGroup>
-            {/* 選択路線描画 */}
-            <SelectedRouteView routes={routes} selectedRoute={selectedRoute} />
-          </LayerGroup>
-
-          <LayerGroup>
-            {/* 黒の折れ線描画 */}
-            <Polyline
-              positions={selectedRoute.points.map((v) => toLatLng(v.chord))}
-              color="black"
-              weight={1}
-            ></Polyline>
-          </LayerGroup>
-
-          <LayerGroup>
-            {/* 赤線描画 */}
-            <RedRouteView routes={routes} selectedRoute={selectedRoute} />
-          </LayerGroup>
-
-          <LayerGroup>
-            {/* 折れ点マーカー描画 */}
-            {selectedRoute.points.map((point, index) => {
-              const [lat, lng] = toLatLng(point.chord);
-              return (
-                <Marker
-                  key={point.id}
-                  position={[lat, lng]}
-                  draggable={true}
-                  /* icon={markerIcon} */
-                  data-xy={point.chord}
-                  eventHandlers={{
-                    dragend: (e) => handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
-                  }}
+            <LayersControl.Overlay name="路線描画" checked>
+              <LayerGroup>
+                <RouteView routes={routes} selectedRoute={selectedRoute} />
+                <SelectedRouteView
+                  routes={routes}
+                  selectedRoute={selectedRoute}
                 />
-              );
-            })}
-          </LayerGroup>
 
-          <LayerGroup>
-            {/* 距離程描画 */}
-            {[
-              ...Array(
-                Math.floor(GetTotalDistance(selectedRoute.points) / 1000),
-              ),
-            ].map((_, i) => {
-              const xy = GetLatLngFromDistance(selectedRoute.points, (i + 1) * 1000);
-              if (Number.isNaN(xy[0])) xy[0] = 0;
-              if (Number.isNaN(xy[1])) xy[1] = 0;
-              return (
-                <Marker
-                  key={`${selectedRoute.id}_${i}`}
-                  position={toLatLng(xy)}
-                  icon={distanceIcon}
-                >
-                </Marker>
-              );
-            })}
-          </LayerGroup>
+                {/* 黒の折れ線描画 */}
+                <Polyline
+                  positions={selectedRoute.points.map((v) => toLatLng(v.chord))}
+                  color="black"
+                  weight={1}
+                ></Polyline>
 
-          <LayerGroup>
-            {/* 駅マーカー描画 */}
-            {selectedRoute.stations.map((station) => {
-              const xy = GetLatLngFromDistance(
-                selectedRoute.points,
-                station.distance,
-              );
-              if (Number.isNaN(xy[0])) xy[0] = 0;
-              if (Number.isNaN(xy[1])) xy[1] = 0;
-              return (
-                <Marker
-                  key={`${selectedRoute.id}_${station.id}`}
-                  position={toLatLng(xy)}
-                  icon={selectedStationIcon}
-                >
-                  <Popup>{station.name}</Popup>
-                </Marker>
-              );
-            })}
-            {/* 駅マーカー描画 */}
-            {routes
-              .filter((v) => v.id !== selectedRoute.id)
-              .flatMap((v) =>
-                v.stations.map((station) => {
-                  const xy = GetLatLngFromDistance(v.points, station.distance);
+                {/* 赤線描画 */}
+                <RedRouteView routes={routes} selectedRoute={selectedRoute} />
+
+                {/* 折れ点マーカー描画 */}
+                {selectedRoute.points.map((point, index) => {
+                  const [lat, lng] = toLatLng(point.chord);
+                  return (
+                    <Marker
+                      key={point.id}
+                      position={[lat, lng]}
+                      draggable={true}
+                      /* icon={markerIcon} */
+                      data-xy={point.chord}
+                      eventHandlers={{
+                        dragend: (e) => handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
+                      }}
+                    />
+                  );
+                })}
+              </LayerGroup>
+            </LayersControl.Overlay>
+
+            <LayersControl.Overlay name="距離程">
+              <LayerGroup>
+                {/* 距離程描画 */}
+                {[
+                  ...Array(
+                    Math.floor(GetTotalDistance(selectedRoute.points) / 1000),
+                  ),
+                ].map((_, i) => {
+                  const xy = GetLatLngFromDistance(
+                    selectedRoute.points,
+                    (i + 1) * 1000,
+                  );
                   if (Number.isNaN(xy[0])) xy[0] = 0;
                   if (Number.isNaN(xy[1])) xy[1] = 0;
                   return (
                     <Marker
-                      key={`${v.id}_${station.id}`}
+                      key={`${selectedRoute.id}_${i}`}
                       position={toLatLng(xy)}
-                      icon={stationIcon}
+                      icon={distanceIcon}
+                    ></Marker>
+                  );
+                })}
+              </LayerGroup>
+            </LayersControl.Overlay>
+            <LayersControl.Overlay name="駅">
+              <LayerGroup>
+                {/* 駅マーカー描画 */}
+                {selectedRoute.stations.map((station) => {
+                  const xy = GetLatLngFromDistance(
+                    selectedRoute.points,
+                    station.distance,
+                  );
+                  if (Number.isNaN(xy[0])) xy[0] = 0;
+                  if (Number.isNaN(xy[1])) xy[1] = 0;
+                  return (
+                    <Marker
+                      key={`${selectedRoute.id}_${station.id}`}
+                      position={toLatLng(xy)}
+                      icon={selectedStationIcon}
                     >
                       <Popup>{station.name}</Popup>
                     </Marker>
                   );
-                }),
-              )}
-          </LayerGroup>
+                })}
+                {/* 駅マーカー描画 */}
+                {routes
+                  .filter((v) => v.id !== selectedRoute.id)
+                  .flatMap((v) =>
+                    v.stations.map((station) => {
+                      const xy = GetLatLngFromDistance(
+                        v.points,
+                        station.distance,
+                      );
+                      if (Number.isNaN(xy[0])) xy[0] = 0;
+                      if (Number.isNaN(xy[1])) xy[1] = 0;
+                      return (
+                        <Marker
+                          key={`${v.id}_${station.id}`}
+                          position={toLatLng(xy)}
+                          icon={stationIcon}
+                        >
+                          <Popup>{station.name}</Popup>
+                        </Marker>
+                      );
+                    }),
+                  )}
+              </LayerGroup>
+            </LayersControl.Overlay>
+          </LayersControl>
         </MapContainer>
       </div>
       {/* プロパティ画面 */}
