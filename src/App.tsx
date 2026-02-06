@@ -126,7 +126,7 @@ function App() {
         spacing={2}
       >
         <Grid sx={{ flex: { xs: 7, md: 7 } }}>
-          <div style={{ height: "100%", width: "100%" }}>
+          <div style={{ height: "100dvh", width: "100%" }}>
             <MapContainer
               center={[35, 135]}
               zoom={10}
@@ -271,7 +271,7 @@ function App() {
         </Grid>
         <Grid sx={{ flex: { xs: 3, md: 3 } }}>
           {/* プロパティ画面 */}
-          <div style={{ overflow: "scroll", height: "100%", width: "100%"}}>
+          <div style={{ overflow: "scroll", height: "100dvh", width: "100%"}}>
             <div
               style={{
                 height: "5%",
