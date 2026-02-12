@@ -341,3 +341,25 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 	}
 	return [0, 0]
 }
+
+/// pos0→pos1→pos2 の曲がり角と方向
+export function GetIA(pos0: [number, number], pos1: [number, number], pos2: [number, number]): { ia: number, direction: "left" | "right" | "straight" } {
+    const v1 = [pos1[0] - pos0[0], pos1[1] - pos0[1]]; // ベクトル1
+    const v2 = [pos2[0] - pos1[0], pos2[1] - pos1[1]]; // ベクトル2
+
+    // 中心角は内積から cosθ を計算
+    const dot = v1[0]*v2[0] + v1[1]*v2[1];
+    const mag1 = Math.hypot(v1[0], v1[1]);
+    const mag2 = Math.hypot(v2[0], v2[1]);
+    const cosTheta = dot / (mag1 * mag2);
+    const angle = Math.acos(Math.max(-1, Math.min(1, cosTheta))); // 0~π
+
+    // 左右判定は外積
+    const cross = v1[0]*v2[1] - v1[1]*v2[0];
+    let direction: "left" | "right" | "straight";
+    if (cross < 0) direction = "left";
+    else if (cross > 0) direction = "right";
+    else direction = "straight";
+
+    return { ia: angle * 180 / Math.PI, direction };
+}

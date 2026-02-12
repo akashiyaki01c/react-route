@@ -27,6 +27,7 @@ import {
   GetCurveBeginDistance,
   GetCurveEndDistance,
   GetLatLngFromDistance,
+  GetIA,
 } from "./model/distance";
 import { Icon } from "leaflet";
 import Button from "@mui/material/Button";
@@ -111,6 +112,16 @@ function App() {
     const mili = Math.floor((distance * 1000) % 1000);
 
     return `${kilo}K${meter.toString().padStart(3, "0")}M${mili.toString().padStart(3, "0")}`;
+  };
+  const decimalToDMS = (decimalDeg: number): string => {
+    const deg = Math.trunc(decimalDeg); // 度
+    const minDecimal = Math.abs(decimalDeg - deg) * 60;
+    const min = Math.trunc(minDecimal); // 分
+    const secDecimal = (minDecimal - min) * 60; // 秒の小数
+    const sec = Math.floor(secDecimal); // 秒の整数部分
+    const secFraction = Math.round((secDecimal - sec) * 100); // 秒の小数第2位
+    const pad = (n: number, width: number) => n.toString().padStart(width, "0");
+    return `${deg}°${pad(min, 2)}'${pad(sec, 2)}"${pad(secFraction, 2)}`;
   };
 
   return (
@@ -271,7 +282,7 @@ function App() {
         </Grid>
         <Grid sx={{ flex: { xs: 3, md: 3 } }}>
           {/* プロパティ画面 */}
-          <div style={{ overflow: "scroll", height: "100dvh", width: "100%"}}>
+          <div style={{ overflow: "scroll", height: "100dvh", width: "100%" }}>
             <div
               style={{
                 height: "5%",
@@ -472,6 +483,22 @@ function App() {
                             </div>
                           )}
                         </div>
+                        <div>
+                          {isEdge ? (
+                            <></>
+                          ) : (
+                            <div style={{ fontFamily: "monospace" }}>
+                              IA{" "}
+                              {decimalToDMS(
+                                GetIA(
+                                  selectedRoute.points[index - 1].chord,
+                                  selectedRoute.points[index].chord,
+                                  selectedRoute.points[index + 1].chord,
+                                ).ia,
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -595,12 +622,18 @@ function App() {
                             selectedRoute.points,
                             index,
                           );
+                          const ia = GetIA(
+                            selectedRoute.points[index - 1].chord,
+                            selectedRoute.points[index].chord,
+                            selectedRoute.points[index + 1].chord,
+                          );
                           const radius = point.curveRadius;
 
                           return {
                             start: Math.floor(bc),
                             end: Math.floor(ec),
-                            direction: "left",
+                            direction: ia.direction,
+                            ia: ia.ia,
                             radius,
                             speed: 0,
                           };
