@@ -19,7 +19,8 @@
     "proj4": "^2.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-leaflet": "^5.0.0-rc.2"
+    "react-leaflet": "^5.0.0-rc.2",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

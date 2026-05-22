@@ -36,12 +36,47 @@ import { RouteView } from "./app/RouteView";
 import { SelectedRouteView } from "./app/SelectedRouteView";
 import { RedRouteView } from "./app/RedRouteView";
 import { Grid } from "@mui/material";
+import { useRouteStore } from "./store";
+
+const stationIcon = new Icon({
+  iconUrl: "/images/station.svg",
+  iconSize: [20, 20],
+});
+const selectedStationIcon = new Icon({
+  iconUrl: "/images/station-selected.svg",
+  iconSize: [20, 20],
+});
+const distanceIcon = new Icon({
+  iconUrl: "/images/distance.svg",
+  iconSize: [20, 20],
+});
+const pointIcon = new Icon({
+  iconUrl: "/images/point.svg",
+  iconSize: [10, 10],
+});
+
+const getDistanceStr = (distance: number) => {
+  const rawKilo = distance / 1000;
+  const kilo = Math.floor(rawKilo);
+  const meter = Math.floor(distance % 1000);
+  const mili = Math.floor((distance * 1000) % 1000);
+
+  return `${kilo}K${meter.toString().padStart(3, "0")}M${mili.toString().padStart(3, "0")}`;
+};
+const decimalToDMS = (decimalDeg: number): string => {
+  const deg = Math.trunc(decimalDeg); // 度
+  const minDecimal = Math.abs(decimalDeg - deg) * 60;
+  const min = Math.trunc(minDecimal); // 分
+  const secDecimal = (minDecimal - min) * 60; // 秒の小数
+  const sec = Math.floor(secDecimal); // 秒の整数部分
+  const secFraction = Math.round((secDecimal - sec) * 100); // 秒の小数第2位
+  const pad = (n: number, width: number) => n.toString().padStart(width, "0");
+  return `${deg}°${pad(min, 2)}'${pad(sec, 2)}"${pad(secFraction, 2)}`;
+};
 
 function App() {
-  const [routes, setRoute] = useState([
-    new Route("新規路線", [], []),
-  ] as Route[]);
-  const [selectedRoute, setSelectedRoute] = useState(routes[0]);
+  const { state, setState } = useRouteStore();
+  const [selectedRoute, setSelectedRoute] = useState(state.routes[0]);
 
   const MapClickHandler = ({
     onAddPoint,
@@ -83,45 +118,13 @@ function App() {
     };
     const route = selectedRoute;
     route.points.push(newPoint);
-    setRoute([...routes]);
+    setState({ ...state, routes: [...state.routes] });
     setSelectedRoute({ ...route });
   };
   const handleDeletePoint = (id: string) => {
     const route = selectedRoute;
     route.points = route.points.filter((point) => point.id !== id);
     // setSelectedRoute(route);
-  };
-
-  const stationIcon = new Icon({
-    iconUrl: "/images/station.svg",
-    iconSize: [20, 20],
-  });
-  const selectedStationIcon = new Icon({
-    iconUrl: "/images/station-selected.svg",
-    iconSize: [20, 20],
-  });
-  const distanceIcon = new Icon({
-    iconUrl: "/images/distance.svg",
-    iconSize: [20, 20],
-  });
-
-  const getDistanceStr = (distance: number) => {
-    const rawKilo = distance / 1000;
-    const kilo = Math.floor(rawKilo);
-    const meter = Math.floor(distance % 1000);
-    const mili = Math.floor((distance * 1000) % 1000);
-
-    return `${kilo}K${meter.toString().padStart(3, "0")}M${mili.toString().padStart(3, "0")}`;
-  };
-  const decimalToDMS = (decimalDeg: number): string => {
-    const deg = Math.trunc(decimalDeg); // 度
-    const minDecimal = Math.abs(decimalDeg - deg) * 60;
-    const min = Math.trunc(minDecimal); // 分
-    const secDecimal = (minDecimal - min) * 60; // 秒の小数
-    const sec = Math.floor(secDecimal); // 秒の整数部分
-    const secFraction = Math.round((secDecimal - sec) * 100); // 秒の小数第2位
-    const pad = (n: number, width: number) => n.toString().padStart(width, "0");
-    return `${deg}°${pad(min, 2)}'${pad(sec, 2)}"${pad(secFraction, 2)}`;
   };
 
   return (
@@ -166,9 +169,9 @@ function App() {
 
                 <LayersControl.Overlay name="路線描画" checked>
                   <LayerGroup>
-                    <RouteView routes={routes} selectedRoute={selectedRoute} />
+                    <RouteView routes={state.routes} selectedRoute={selectedRoute} />
                     <SelectedRouteView
-                      routes={routes}
+                      routes={state.routes}
                       selectedRoute={selectedRoute}
                     />
 
@@ -183,7 +186,7 @@ function App() {
 
                     {/* 赤線描画 */}
                     <RedRouteView
-                      routes={routes}
+                      routes={state.routes}
                       selectedRoute={selectedRoute}
                     />
 
@@ -195,7 +198,7 @@ function App() {
                           key={point.id}
                           position={[lat, lng]}
                           draggable={true}
-                          /* icon={markerIcon} */
+                          icon={pointIcon}
                           data-xy={point.chord}
                           eventHandlers={{
                             dragend: (e) => handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
@@ -253,7 +256,7 @@ function App() {
                       );
                     })}
                     {/* 駅マーカー描画 */}
-                    {routes
+                    {state.routes
                       .filter((v) => v.id !== selectedRoute.id)
                       .flatMap((v) =>
                         v.stations.map((station) => {
@@ -310,13 +313,13 @@ function App() {
                   variant="outlined"
                   onClick={() => {
                     const currentIndex =
-                      routes
+                      state.routes
                         .map((v, i) => (v.id === selectedRoute.id ? i : null))
                         .find((v) => v != null) || 0;
-                    routes[currentIndex] = selectedRoute;
-                    routes.push(new Route("新規路線", [], []));
-                    setRoute(routes);
-                    setSelectedRoute(routes[routes.length - 1]);
+                    state.routes[currentIndex] = selectedRoute;
+                    state.routes.push(new Route("新規路線", [], []));
+                    setState({routes: state.routes});
+                    setSelectedRoute(state.routes[state.routes.length - 1]);
                   }}
                 >
                   路線追加
@@ -330,7 +333,7 @@ function App() {
                   padding: "2.5%",
                 }}
               >
-                {routes.map((v) => (
+                {state.routes.map((v) => (
                   <div
                     key={v.id}
                     style={{
@@ -343,15 +346,15 @@ function App() {
                       style={{ width: "6ric", flex: "1" }}
                       onChange={(e) => {
                         v.name = e.target.value;
-                        setRoute([...routes]);
+                        setState({routes: [...state.routes]});
                       }}
                       value={v.name}
                     ></TextField>
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        setRoute(routes.filter((v1) => v.id !== v1.id));
-                        setSelectedRoute(routes[routes.length - 1]);
+                        setState({routes: state.routes.filter((v1) => v.id !== v1.id)});
+                        setSelectedRoute(state.routes[state.routes.length - 1]);
                       }}
                     >
                       削除
@@ -360,15 +363,15 @@ function App() {
                       variant="contained"
                       onClick={() => {
                         const currentIndex =
-                          routes
+                          state.routes
                             .map((v, i) =>
                               v.id === selectedRoute.id ? i : null,
                             )
                             .find((v) => v != null) || 0;
-                        routes[currentIndex] = selectedRoute;
-                        setRoute([...routes]);
+                        state.routes[currentIndex] = selectedRoute;
+                        setState({routes: [...state.routes]});
                         setSelectedRoute(
-                          routes.find((v1) => v.id === v1.id) || routes[0],
+                          state.routes.find((v1) => v.id === v1.id) || state.routes[0],
                         );
                       }}
                     >
@@ -597,7 +600,7 @@ function App() {
                   variant="contained"
                   onClick={() => {
                     document.querySelector("textarea")!.value =
-                      JSON.stringify(routes);
+                      JSON.stringify(state.routes);
                   }}
                 >
                   JSON出力
@@ -748,7 +751,7 @@ function App() {
                   onClick={() => {
                     document.querySelector("textarea")!.value = JSON.stringify({
                       type: "FeatureCollection",
-                      features: routes
+                      features: state.routes
                         .flatMap((route) => [
                           route.points.length == 2
                             ? ({
@@ -986,7 +989,7 @@ function App() {
                     try {
                       const obj = JSON.parse(text);
                       setSelectedRoute(obj[0]);
-                      setRoute(obj);
+                      setState(obj);
                     } catch {
                       /*  */
                     }
