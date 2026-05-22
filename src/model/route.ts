@@ -53,9 +53,3 @@ export class Station {
 		this.distance = distance || 0;
 	}
 }
-
-export const TestRouteData: Route = new Route(
-	"テスト",
-	[],
-	[]
-);
