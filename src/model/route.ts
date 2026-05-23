@@ -18,7 +18,7 @@ export type Station = z.infer<typeof StationScheme>
 export const RouteScheme = z.object({
 	id: z.string(),
 	name: z.string(),
-	points: RoutePointScheme.array(),
-	stations: StationScheme.array(),
+	points: RoutePointScheme.array().default([]),
+	stations: StationScheme.array().default([]),
 });
 export type Route = z.infer<typeof RouteScheme>
