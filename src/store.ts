@@ -12,7 +12,10 @@ export const useRouteStore = create<RouteStore>((set) => ({
 				id: crypto.randomUUID(),
 				name: "新規路線",
 				points: [],
-				stations: []
+				stations: [],
+				crossings: [],
+				culverts: [],
+				terrains: []
 			}
 		]
 	},

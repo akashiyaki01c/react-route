@@ -1,6 +1,7 @@
-import { Button, TextInput } from "@mantine/core";
+import { Button, Textarea, TextInput } from "@mantine/core";
 import { Route } from "../model/route";
 import { State } from "../model/state";
+import { useRef, useState } from "react";
 
 interface Props {
   routes: Route[];
@@ -10,6 +11,10 @@ interface Props {
 }
 
 export function RouteEdit(props: Props) {
+  const [inputTerrain, setInputTerrain] = useState("");
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
+
   return (
     <div
       style={{
@@ -43,6 +48,9 @@ export function RouteEdit(props: Props) {
                 name: "新規路線",
                 points: [],
                 stations: [],
+                crossings: [],
+                culverts: [],
+                terrains: [],
               });
               props.setState({ routes: props.routes });
               props.setSelectedRoute(props.routes[props.routes.length - 1]);
@@ -54,13 +62,13 @@ export function RouteEdit(props: Props) {
       </div>
       <div
         style={{
-          height: "20em",
+          height: "10em",
           overflow: "scroll",
           border: "1px black solid",
           padding: "0.5em",
         }}
       >
-        {props.routes.map((v) => (
+        {props.routes.map((v, i) => (
           <div
             key={v.id}
             style={{
@@ -91,6 +99,15 @@ export function RouteEdit(props: Props) {
               削除
             </Button>
             <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedRouteIndex(i);
+                dialogRef.current?.showModal();
+              }}
+            >
+              標高入力
+            </Button>
+            <Button
               variant="contained"
               onClick={() => {
                 const currentIndex =
@@ -109,6 +126,30 @@ export function RouteEdit(props: Props) {
           </div>
         ))}
       </div>
+      <dialog ref={dialogRef}>
+        <Textarea
+          value={inputTerrain}
+          onChange={(e) => setInputTerrain(e.target.value)}
+        />
+        <Button
+          onClick={() => {
+            props.routes[selectedRouteIndex].terrains = inputTerrain
+              .split("\n")
+              .slice(1)
+              .map((v) => v.split("\t").map((v) => v.trim()))
+              .map((v) => ({
+                distance: Number.parseFloat(v[0]),
+                x: Number.parseFloat(v[1]),
+                y: Number.parseFloat(v[2]),
+                z: Number.parseFloat(v[3]),
+              }));
+            props.setState({ routes: props.routes });
+            dialogRef.current?.close();
+          }}
+        >
+          確定
+        </Button>
+      </dialog>
     </div>
   );
 }

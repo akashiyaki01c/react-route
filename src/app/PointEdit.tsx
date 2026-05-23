@@ -88,7 +88,7 @@ export function PointEdit(props: Props) {
       </div>
       <div
         style={{
-          height: "70%",
+          height: "10em",
           overflowY: "scroll",
           border: "1px black solid",
           padding: "2.5%",

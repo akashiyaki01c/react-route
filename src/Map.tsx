@@ -43,6 +43,10 @@ const pointIcon = new Icon({
   iconUrl: "/images/point.svg",
   iconSize: [10, 10],
 });
+const crossingIcon = new Icon({
+  iconUrl: "/images/crossing.svg",
+  iconSize: [20, 20],
+});
 
 export function Map(props: Props) {
   return (
@@ -131,6 +135,31 @@ export function Map(props: Props) {
                   ></Marker>
                 );
               })}
+            </LayerGroup>
+          </LayersControl.Overlay>
+          <LayersControl.Overlay name="踏切">
+            <LayerGroup>
+              {/* 踏切マーカー描画 */}
+              {props.routes
+                .flatMap((v) =>
+                  v.crossings.map((station) => {
+                    const xy = GetLatLngFromDistance(
+                      v.points,
+                      station.distance,
+                    );
+                    if (Number.isNaN(xy[0])) xy[0] = 0;
+                    if (Number.isNaN(xy[1])) xy[1] = 0;
+                    return (
+                      <Marker
+                        key={`${v.id}_${station.id}`}
+                        position={toLatLng(xy)}
+                        icon={crossingIcon}
+                      >
+                        <Popup>{station.name}</Popup>
+                      </Marker>
+                    );
+                  }),
+                )}
             </LayerGroup>
           </LayersControl.Overlay>
           <LayersControl.Overlay name="駅">
