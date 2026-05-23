@@ -248,15 +248,6 @@ export function GetTotalDistance(points: RoutePoint[]) {
 		}
 	}
 
-	for (let i = 1; i < points.length - 1; i++) {
-		console.log(i, {
-			begin: GetCurveBeginDistance(points, i),
-			end: GetCurveEndDistance(points, i),
-			diff: GetCurveEndDistance(points, i)
-				- GetCurveBeginDistance(points, i)
-		});
-	}
-
 	return totalDistance;
 }
 
@@ -332,7 +323,6 @@ export function GetLatLngFromDistance(points: RoutePoint[], distance: number): [
 			const angle = start + (arcAngle * proper);
 
 			const pos = getCircleCenterPosition(pos0, pos1, pos2, points[i].curveRadius);
-			console.log(proper)
 			return [
 				pos[0] + Math.sin(angle) * points[i].curveRadius,
 				pos[1] + Math.cos(angle) * points[i].curveRadius
