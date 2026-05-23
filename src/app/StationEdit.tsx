@@ -1,5 +1,5 @@
 import { Button, NumberInput, TextInput } from "@mantine/core";
-import { Route, Station } from "../model/route";
+import { Route } from "../model/route";
 import { State } from "../model/state";
 
 interface Props {
@@ -51,7 +51,11 @@ export function StationEdit(props: Props) {
           <Button
             variant="outline"
             onClick={() => {
-              props.selectedRoute.stations.push(new Station("", 0));
+              props.selectedRoute.stations.push({
+				  id: crypto.randomUUID(),
+				  name: "",
+				  distance: 0
+			  });
               props.setSelectedRoute({ ...props.selectedRoute });
             }}
           >

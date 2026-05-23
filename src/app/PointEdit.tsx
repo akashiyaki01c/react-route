@@ -162,9 +162,9 @@ export function PointEdit(props: Props) {
                       IA{" "}
                       {decimalToDMS(
                         GetIA(
-                          props.selectedRoute.points[index - 1].chord,
-                          props.selectedRoute.points[index].chord,
-                          props.selectedRoute.points[index + 1].chord,
+                          props.selectedRoute.points[index - 1].coord,
+                          props.selectedRoute.points[index].coord,
+                          props.selectedRoute.points[index + 1].coord,
                         ).ia,
                       )}
                     </div>

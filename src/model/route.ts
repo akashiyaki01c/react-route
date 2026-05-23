@@ -1,55 +1,24 @@
-/**
- * 一つの路線を表す
- */
-export class Route {
-	id = "";
-	name = "";
-	points: RoutePoint[] = [];
-	stations: Station[] = [];
+import z from "zod";
 
-	constructor(name: string, points: RoutePoint[], stations: Station[]) {
-		this.id = crypto.randomUUID();
-		this.name = name || "";
-		this.points = points || [];
-		this.stations = stations || [];
-	}
-}
+export const RoutePointScheme = z.object({
+	id: z.string(),
+	coord: z.tuple([z.number(), z.number()]),
+	isEdge: z.boolean(),
+	curveRadius: z.number(),
+});
+export type RoutePoint = z.infer<typeof RoutePointScheme>
 
-/**
- * 路線を構成する経由点を表す
- */
-export class RoutePoint {
-	/** 一意のID */
-	id = "";
-	/** 5系の座標 */
-	chord: [number, number] = [0, 0];
-	/** 端の点かどうか */
-	isEdge = false;
-	/** 曲線半径 */
-	curveRadius = 300;
+export const StationScheme = z.object({
+	id: z.string(),
+	name: z.string(),
+	distance: z.number(),
+});
+export type Station = z.infer<typeof StationScheme>
 
-	constructor(chord: [number, number], isEdge: boolean, curveRadius: number) {
-		this.id = crypto.randomUUID();
-		this.chord = chord || [0, 0];
-		this.isEdge = isEdge || false;
-		this.curveRadius = curveRadius || 300;
-	}
-}
-
-/**
- * 駅を表す
- */
-export class Station {
-	/** 一意のID */
-	id = "";
-	/** 駅名 */
-	name = "";
-	/** 距離程 */
-	distance = 0;
-
-	constructor(name: string, distance: number) {
-		this.id = crypto.randomUUID();
-		this.name = name || "";
-		this.distance = distance || 0;
-	}
-}
+export const RouteScheme = z.object({
+	id: z.string(),
+	name: z.string(),
+	points: RoutePointScheme.array(),
+	stations: StationScheme.array(),
+});
+export type Route = z.infer<typeof RouteScheme>

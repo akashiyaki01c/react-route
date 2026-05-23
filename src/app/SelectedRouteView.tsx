@@ -91,9 +91,9 @@ export function SelectedRouteView(props: Props) {
           }
 
           return getCircle(
-            before.chord,
-            point.chord,
-            after.chord,
+            before.coord,
+            point.coord,
+            after.coord,
             point.curveRadius,
           );
         })

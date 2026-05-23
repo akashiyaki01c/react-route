@@ -1,14 +1,20 @@
 import { create } from "zustand"
 import { State } from "./model/state"
-import { Route } from "./model/route";
 
 type RouteStore = {
 	state: State,
 	setState: (state: State) => void,
 }
 export const useRouteStore = create<RouteStore>((set) => ({
-	state: new State([
-		new Route("新規路線", [], [])
-	]),
+	state: {
+		routes: [
+			{
+				id: crypto.randomUUID(),
+				name: "新規路線",
+				points: [],
+				stations: []
+			}
+		]
+	},
 	setState: (state: State) => set({ state }),
 }));

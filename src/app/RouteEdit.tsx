@@ -3,10 +3,10 @@ import { Route } from "../model/route";
 import { State } from "../model/state";
 
 interface Props {
-	routes: Route[],
-	selectedRoute: Route,
-  setState: (state: State) => void,
-  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>
+  routes: Route[];
+  selectedRoute: Route;
+  setState: (state: State) => void;
+  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
 }
 
 export function RouteEdit(props: Props) {
@@ -38,7 +38,12 @@ export function RouteEdit(props: Props) {
                   .map((v, i) => (v.id === props.selectedRoute.id ? i : null))
                   .find((v) => v != null) || 0;
               props.routes[currentIndex] = props.selectedRoute;
-              props.routes.push(new Route("新規路線", [], []));
+              props.routes.push({
+                id: crypto.randomUUID(),
+                name: "新規路線",
+                points: [],
+                stations: [],
+              });
               props.setState({ routes: props.routes });
               props.setSelectedRoute(props.routes[props.routes.length - 1]);
             }}
@@ -60,7 +65,8 @@ export function RouteEdit(props: Props) {
             key={v.id}
             style={{
               display: "flex",
-              border: v.id === props.selectedRoute.id ? "2px solid #b4daff" : "",
+              border:
+                v.id === props.selectedRoute.id ? "2px solid #b4daff" : "",
               padding: v.id === props.selectedRoute.id ? "2px" : "4px",
               gap: "0.25em",
             }}

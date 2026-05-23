@@ -77,9 +77,9 @@ export function RouteView(props: Props) {
             }
 
             return getCircle(
-              before.chord,
-              point.chord,
-              after.chord,
+              before.coord,
+              point.coord,
+              after.coord,
               point.curveRadius,
             );
           }),
@@ -87,8 +87,8 @@ export function RouteView(props: Props) {
             <Polyline
               key={`${route.id}_line2`}
               positions={[
-                toLatLng(route.points[0].chord),
-                toLatLng(route.points[1].chord),
+                toLatLng(route.points[0].coord),
+                toLatLng(route.points[1].coord),
               ]}
               color="red"
             ></Polyline>
@@ -99,12 +99,12 @@ export function RouteView(props: Props) {
             <Polyline
               key={`${route.id}_line3`}
               positions={[
-                toLatLng(route.points[0].chord),
+                toLatLng(route.points[0].coord),
                 toLatLng(
                   getCircleBeginPosition(
-                    route.points[0].chord,
-                    route.points[1].chord,
-                    route.points[2].chord,
+                    route.points[0].coord,
+                    route.points[1].coord,
+                    route.points[2].coord,
                     route.points[1].curveRadius,
                   ),
                 ),
@@ -118,12 +118,12 @@ export function RouteView(props: Props) {
             <Polyline
               key={`${route.id}_line4`}
               positions={[
-                toLatLng(route.points[route.points.length - 1].chord),
+                toLatLng(route.points[route.points.length - 1].coord),
                 toLatLng(
                   getCircleEndPosition(
-                    route.points[route.points.length - 3].chord,
-                    route.points[route.points.length - 2].chord,
-                    route.points[route.points.length - 1].chord,
+                    route.points[route.points.length - 3].coord,
+                    route.points[route.points.length - 2].coord,
+                    route.points[route.points.length - 1].coord,
                     route.points[route.points.length - 2].curveRadius,
                   ),
                 ),
@@ -147,17 +147,17 @@ export function RouteView(props: Props) {
                 positions={[
                   toLatLng(
                     getCircleEndPosition(
-                      before2.chord,
-                      before.chord,
-                      point.chord,
+                      before2.coord,
+                      before.coord,
+                      point.coord,
                       before.curveRadius,
                     ),
                   ),
                   toLatLng(
                     getCircleBeginPosition(
-                      before.chord,
-                      point.chord,
-                      after.chord,
+                      before.coord,
+                      point.coord,
+                      after.coord,
                       point.curveRadius,
                     ),
                   ),

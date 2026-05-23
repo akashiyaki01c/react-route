@@ -79,7 +79,7 @@ export function Map(props: Props) {
 
               {/* 黒の折れ線描画 */}
               <Polyline
-                positions={props.selectedRoute.points.map((v) => toLatLng(v.chord))}
+                positions={props.selectedRoute.points.map((v) => toLatLng(v.coord))}
                 color="black"
                 weight={1}
               ></Polyline>
@@ -92,14 +92,14 @@ export function Map(props: Props) {
 
               {/* 折れ点マーカー描画 */}
               {props.selectedRoute.points.map((point, index) => {
-                const [lat, lng] = toLatLng(point.chord);
+                const [lat, lng] = toLatLng(point.coord);
                 return (
                   <Marker
                     key={point.id}
                     position={[lat, lng]}
                     draggable={true}
                     icon={pointIcon}
-                    data-xy={point.chord}
+                    data-xy={point.coord}
                     eventHandlers={{
                       dragend: (e) => props.handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
                     }}

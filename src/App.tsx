@@ -25,6 +25,7 @@ import { Map } from "./Map";
 import { RouteEdit } from "./app/RouteEdit";
 import { PointEdit } from "./app/PointEdit";
 import { StationEdit } from "./app/StationEdit";
+import { StateScheme } from "./model/state";
 
 function App() {
   const { state, setState } = useRouteStore();
@@ -63,7 +64,7 @@ function App() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDragPoint = (index: number, e: any) => {
-    selectedRoute.points[index].chord = fromLatLng([
+    selectedRoute.points[index].coord = fromLatLng([
       e.target._latlng.lat,
       e.target._latlng.lng,
     ]);
@@ -73,7 +74,7 @@ function App() {
     const [x, y] = fromLatLng([lat, lng]);
     const newPoint: RoutePoint = {
       id: crypto.randomUUID(),
-      chord: [x, y],
+      coord: [x, y],
       isEdge: false,
       curveRadius: 300,
     };
@@ -206,9 +207,9 @@ function App() {
                             index,
                           );
                           const ia = GetIA(
-                            selectedRoute.points[index - 1].chord,
-                            selectedRoute.points[index].chord,
-                            selectedRoute.points[index + 1].chord,
+                            selectedRoute.points[index - 1].coord,
+                            selectedRoute.points[index].coord,
+                            selectedRoute.points[index + 1].coord,
                           );
                           const radius = point.curveRadius;
 
@@ -339,8 +340,8 @@ function App() {
                                 geometry: {
                                   type: "LineString",
                                   coordinates: [
-                                    toLatLng(route.points[0].chord).reverse(),
-                                    toLatLng(route.points[1].chord).reverse(),
+                                    toLatLng(route.points[0].coord).reverse(),
+                                    toLatLng(route.points[1].coord).reverse(),
                                   ],
                                 } satisfies LineString,
                                 properties: null,
@@ -359,12 +360,12 @@ function App() {
                                 geometry: {
                                   type: "LineString",
                                   coordinates: [
-                                    toLatLng(route.points[0].chord).reverse(),
+                                    toLatLng(route.points[0].coord).reverse(),
                                     toLatLng(
                                       getCircleBeginPosition(
-                                        route.points[0].chord,
-                                        route.points[1].chord,
-                                        route.points[2].chord,
+                                        route.points[0].coord,
+                                        route.points[1].coord,
+                                        route.points[2].coord,
                                         route.points[1].curveRadius,
                                       ),
                                     ).reverse(),
@@ -388,16 +389,16 @@ function App() {
                                   coordinates: [
                                     toLatLng(
                                       route.points[route.points.length - 1]
-                                        .chord,
+                                        .coord,
                                     ).reverse(),
                                     toLatLng(
                                       getCircleEndPosition(
                                         route.points[route.points.length - 3]
-                                          .chord,
+                                          .coord,
                                         route.points[route.points.length - 2]
-                                          .chord,
+                                          .coord,
                                         route.points[route.points.length - 1]
-                                          .chord,
+                                          .coord,
                                         route.points[route.points.length - 2]
                                           .curveRadius,
                                       ),
@@ -481,9 +482,9 @@ function App() {
                                 }
                               }
                               return getCircleChoord(
-                                before.chord,
-                                point.chord,
-                                after.chord,
+                                before.coord,
+                                point.coord,
+                                after.coord,
                                 point.curveRadius,
                               );
                             })
@@ -515,17 +516,17 @@ function App() {
                               return [
                                 toLatLng(
                                   getCircleEndPosition(
-                                    before2.chord,
-                                    before.chord,
-                                    point.chord,
+                                    before2.coord,
+                                    before.coord,
+                                    point.coord,
                                     before.curveRadius,
                                   ),
                                 ).reverse(),
                                 toLatLng(
                                   getCircleBeginPosition(
-                                    before.chord,
-                                    point.chord,
-                                    after.chord,
+                                    before.coord,
+                                    point.coord,
+                                    after.coord,
                                     point.curveRadius,
                                   ),
                                 ).reverse(),
@@ -565,7 +566,7 @@ function App() {
                       return;
                     }
 
-                    const [handle] = await window.showOpenFilePicker({
+                    const [handle] = await (window).showOpenFilePicker({
                       types: [
                         {
                           description: "JSON Files",
@@ -580,12 +581,13 @@ function App() {
                     try {
                       const file = await handle.getFile();
                       const text = await file.text();
-                      const json = JSON.parse(text);
+                      const json = StateScheme.parse(JSON.parse(text));
                       console.log(json);
                       setState(json);
                       setSelectedRoute(state.routes[0]);
-                    } catch {
-                      /*  */
+                    } catch (error) {
+                      console.error(error);
+                      alert("読み込みに失敗しました。")
                     }
                   }}
                 >

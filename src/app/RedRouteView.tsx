@@ -14,8 +14,8 @@ export function RedRouteView(props: Props) {
       {props.selectedRoute.points.length == 2 ? (
         <Polyline
           positions={[
-            toLatLng(props.selectedRoute.points[0].chord),
-            toLatLng(props.selectedRoute.points[1].chord),
+            toLatLng(props.selectedRoute.points[0].coord),
+            toLatLng(props.selectedRoute.points[1].coord),
           ]}
           color="red"
         ></Polyline>
@@ -25,12 +25,12 @@ export function RedRouteView(props: Props) {
       {props.selectedRoute.points.length > 2 ? (
         <Polyline
           positions={[
-            toLatLng(props.selectedRoute.points[0].chord),
+            toLatLng(props.selectedRoute.points[0].coord),
             toLatLng(
               getCircleBeginPosition(
-                props.selectedRoute.points[0].chord,
-                props.selectedRoute.points[1].chord,
-                props.selectedRoute.points[2].chord,
+                props.selectedRoute.points[0].coord,
+                props.selectedRoute.points[1].coord,
+                props.selectedRoute.points[2].coord,
                 props.selectedRoute.points[1].curveRadius,
               ),
             ),
@@ -44,13 +44,13 @@ export function RedRouteView(props: Props) {
         <Polyline
           positions={[
             toLatLng(
-              props.selectedRoute.points[props.selectedRoute.points.length - 1].chord,
+              props.selectedRoute.points[props.selectedRoute.points.length - 1].coord,
             ),
             toLatLng(
               getCircleEndPosition(
-                props.selectedRoute.points[props.selectedRoute.points.length - 3].chord,
-                props.selectedRoute.points[props.selectedRoute.points.length - 2].chord,
-                props.selectedRoute.points[props.selectedRoute.points.length - 1].chord,
+                props.selectedRoute.points[props.selectedRoute.points.length - 3].coord,
+                props.selectedRoute.points[props.selectedRoute.points.length - 2].coord,
+                props.selectedRoute.points[props.selectedRoute.points.length - 1].coord,
                 props.selectedRoute.points[props.selectedRoute.points.length - 2]
                   .curveRadius,
               ),
@@ -75,17 +75,17 @@ export function RedRouteView(props: Props) {
             positions={[
               toLatLng(
                 getCircleEndPosition(
-                  before2.chord,
-                  before.chord,
-                  point.chord,
+                  before2.coord,
+                  before.coord,
+                  point.coord,
                   before.curveRadius,
                 ),
               ),
               toLatLng(
                 getCircleBeginPosition(
-                  before.chord,
-                  point.chord,
-                  after.chord,
+                  before.coord,
+                  point.coord,
+                  after.coord,
                   point.curveRadius,
                 ),
               ),

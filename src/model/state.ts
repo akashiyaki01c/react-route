@@ -1,9 +1,7 @@
-import { Route } from "./route";
+import z from "zod";
+import { RouteScheme } from "./route";
 
-export class State {
-	routes: Route[] = [];
-
-	constructor(routes: Route[]) {
-		this.routes = routes;
-	}
-}
+export const StateScheme = z.object({
+	routes: RouteScheme.array(),
+});
+export type State = z.infer<typeof StateScheme>
