@@ -110,7 +110,7 @@ function App() {
               flexDirection: "column",
               gap: "0.5em",
               overflow: "scroll",
-              minHeight: "100dvh",
+              maxHeight: "100dvh",
               width: "100%",
               padding: "0.5em",
             }}
@@ -175,6 +175,7 @@ function App() {
                       await writable.write(JSON.stringify(state, null, 2));
                       await writable.close();
                       console.log("saved");
+                      alert("保存しました！");
                     } catch (error) {
                       console.error(error);
                     }
