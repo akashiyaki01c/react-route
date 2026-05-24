@@ -2,8 +2,8 @@ import { useMapEvents } from "react-leaflet/hooks";
 import "./leaflet.css";
 import "./App.css";
 
-import { RoutePoint } from "./model/route";
-import { useState } from "react";
+import { Route, RoutePoint } from "./model/route";
+import { useMemo, useState } from "react";
 import { fromLatLng } from "./model/convert";
 import {
   GetCurveBeginDistance,
@@ -26,19 +26,23 @@ import { CulvertEdit } from "./app/CulvertEdit";
 import { StructureEdit } from "./app/StructureEdit";
 
 function App() {
-  const { state, setState } = useRouteStore();
-  const [selectedRoute, setSelectedRoute] = useState(state.routes[0]);
+  const { state, setState, loadState, selectedRouteId } = useRouteStore();
   const [fileHandle, setFileHandle] = useState(undefined);
   const [pointerDistance, setPointerDistance] = useState(0);
 
-  const getSelectedRoute = () => {
-    if (state.routes.map((v) => v.id).includes(selectedRoute.id)) {
-      return selectedRoute;
-    } else {
-      setSelectedRoute(state.routes[0]);
-      return state.routes[0];
-    }
+  const updateSelectedRoute = (updater: (route: Route) => Route) => {
+    setState((state) => ({
+      ...state,
+      routes: state.routes.map((route) =>
+        route.id === selectedRouteId ? updater(route) : route,
+      ),
+    }));
   };
+
+  const selectedRoute = useMemo(
+    () => state.routes.find((v) => v.id === selectedRouteId)!,
+    [selectedRouteId, state.routes],
+  );
 
   const MapClickHandler = ({
     onAddPoint,
@@ -55,7 +59,6 @@ function App() {
           handleDeletePoint(
             selectedRoute.points[selectedRoute.points.length - 1].id,
           );
-          setSelectedRoute({ ...selectedRoute });
         }
       },
     });
@@ -64,29 +67,41 @@ function App() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDragPoint = (index: number, e: any) => {
-    selectedRoute.points[index].coord = fromLatLng([
-      e.target._latlng.lat,
-      e.target._latlng.lng,
-    ]);
-    setSelectedRoute({ ...selectedRoute });
+    const newCoord = fromLatLng([e.target._latlng.lat, e.target._latlng.lng]);
+
+    updateSelectedRoute((route) => ({
+      ...route,
+      points: route.points.map((point, i) =>
+        i === index
+          ? {
+              ...point,
+              coord: newCoord,
+            }
+          : point,
+      ),
+    }));
   };
+
   const handleAddPoint = (lat: number, lng: number) => {
     const [x, y] = fromLatLng([lat, lng]);
+
     const newPoint: RoutePoint = {
       id: crypto.randomUUID(),
       coord: [x, y],
       isEdge: false,
       curveRadius: 300,
     };
-    const route = selectedRoute;
-    route.points.push(newPoint);
-    setState({ ...state, routes: [...state.routes] });
-    setSelectedRoute({ ...route });
+
+    updateSelectedRoute((route) => ({
+      ...route,
+      points: [...route.points, newPoint],
+    }));
   };
   const handleDeletePoint = (id: string) => {
-    const route = selectedRoute;
-    route.points = route.points.filter((point) => point.id !== id);
-    // setSelectedRoute(route);
+    updateSelectedRoute((route) => ({
+      ...route,
+      points: route.points.filter((point) => point.id !== id),
+    }));
   };
 
   return (
@@ -100,14 +115,18 @@ function App() {
                 mapClickHandler={MapClickHandler}
                 handleDragPoint={handleDragPoint}
                 handleAddPoint={handleAddPoint}
-                routes={state.routes}
-                selectedRoute={getSelectedRoute()}
                 pointerDistance={pointerDistance}
               />
             </div>
-            <div style={{ width: "100%", height: "50%", maxHeight: "50%", overflow: "scroll" }}>
+            <div
+              style={{
+                width: "100%",
+                height: "50%",
+                maxHeight: "50%",
+                overflow: "scroll",
+              }}
+            >
               <Vertical
-                selectedRoute={selectedRoute}
                 setPointerDistance={setPointerDistance}
                 pointerDistance={pointerDistance}
               />
@@ -137,49 +156,13 @@ function App() {
             >
               <span style={{ fontWeight: "bold" }}>線路図作成支援ツール</span>
             </div>
-            <RouteEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-            />
-            <PointEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-              handleDeletePoint={handleDeletePoint}
-            />
-            <StationEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-            />
-            <CrossingEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-            />
-            <CulvertEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-            />
-            <GradientEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-            />
-            <StructureEdit
-              routes={state.routes}
-              selectedRoute={getSelectedRoute()}
-              setState={setState}
-              setSelectedRoute={setSelectedRoute}
-            />
+            <RouteEdit />
+            <PointEdit handleDeletePoint={handleDeletePoint} />
+            <StationEdit />
+            <CrossingEdit />
+            <CulvertEdit />
+            <GradientEdit />
+            <StructureEdit />
             <div
               style={{
                 height: "20%",
@@ -401,8 +384,8 @@ function App() {
                       const text = await file.text();
                       const json = StateScheme.parse(JSON.parse(text));
                       console.log(json);
-                      setState(json);
-                      setSelectedRoute(state.routes[0]);
+                      console.log(json.routes[0].id);
+                      loadState(json);
                     } catch (error) {
                       console.error(error);
                       alert("読み込みに失敗しました。");

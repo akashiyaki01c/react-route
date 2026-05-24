@@ -1,15 +1,19 @@
 import { Button, NumberInput, Select, TextInput } from "@mantine/core";
 import { Route } from "../model/route";
-import { State } from "../model/state";
+import { useRouteStore, useSelectedRoute } from "../store";
 
-interface Props {
-  routes: Route[];
-  selectedRoute: Route;
-  setState: (state: State) => void;
-  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
-}
+export function StructureEdit() {
+  const { setState } = useRouteStore();
+  const selectedRoute = useSelectedRoute();
+  const updateSelectedRoute = (updater: (route: Route) => Route) => {
+    setState((state) => ({
+      ...state,
+      routes: state.routes.map((route) =>
+        route.id === selectedRoute.id ? updater(route) : route,
+      ),
+    }));
+  };
 
-export function StructureEdit(props: Props) {
   return (
     <div
       style={{
@@ -40,11 +44,12 @@ export function StructureEdit(props: Props) {
           <Button
             variant="white"
             onClick={() => {
-              props.selectedRoute.structures =
-                props.selectedRoute.structures.sort(
+              updateSelectedRoute((route) => ({
+                ...route,
+                structures: route.structures.toSorted(
                   (a, b) => a.start - b.start,
-                );
-              props.setSelectedRoute({ ...props.selectedRoute });
+                ),
+              }));
             }}
           >
             構造物ソート
@@ -52,13 +57,18 @@ export function StructureEdit(props: Props) {
           <Button
             variant="outline"
             onClick={() => {
-              props.selectedRoute.structures.push({
-                start: 0,
-                end: 0,
-                name: "",
-                type: "tunnel",
-              });
-              props.setSelectedRoute({ ...props.selectedRoute });
+              updateSelectedRoute((route) => ({
+                ...route,
+                structures: [
+                  ...route.structures,
+                  {
+                    start: 0,
+                    end: 0,
+                    name: "",
+                    type: "tunnel",
+                  },
+                ],
+              }));
             }}
           >
             構造物追加
@@ -71,12 +81,12 @@ export function StructureEdit(props: Props) {
           overflowY: "scroll",
           border: "1px black solid",
           padding: "2.5%",
-		  gap: "1em",
-		  display: "flex",
-		  flexDirection: "column"
+          gap: "1em",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        {props.selectedRoute.structures.map((structure, index) => (
+        {selectedRoute.structures.map((structure, index) => (
           <div
             key={structure.name}
             style={{
@@ -103,10 +113,12 @@ export function StructureEdit(props: Props) {
                     type="text"
                     value={structure.name}
                     onChange={(e) => {
-                      structure.name = e.target.value;
-                      props.setSelectedRoute(
-                        structuredClone(props.selectedRoute),
-                      );
+                      updateSelectedRoute((route) => ({
+                        ...route,
+                        structures: route.structures.map((v, i) =>
+                          i === index ? { ...v, name: e.target.value } : v,
+                        ),
+                      }));
                     }}
                   />
                 </div>
@@ -123,10 +135,12 @@ export function StructureEdit(props: Props) {
                     data={["tunnel", "bridge"]}
                     value={structure.type}
                     onChange={(e) => {
-                      structure.type = e || "tunnel";
-                      props.setSelectedRoute(
-                        structuredClone(props.selectedRoute),
-                      );
+                      updateSelectedRoute((route) => ({
+                        ...route,
+                        structures: route.structures.map((v, i) =>
+                          i === index ? { ...v, type: e || "tunnel" } : v,
+                        ),
+                      }));
                     }}
                   />
                 </div>
@@ -144,10 +158,17 @@ export function StructureEdit(props: Props) {
                   style={{ width: "6ric" }}
                   value={structure.start}
                   onValueChange={(e) => {
-                    structure.start = Number.parseInt(e.formattedValue) || 0;
-                    props.setSelectedRoute(
-                      structuredClone(props.selectedRoute),
-                    );
+                    updateSelectedRoute((route) => ({
+                      ...route,
+                      structures: route.structures.map((v, i) =>
+                        i === index
+                          ? {
+                              ...v,
+                              start: Number.parseInt(e.formattedValue) || 0,
+                            }
+                          : v,
+                      ),
+                    }));
                   }}
                 />
                 m -
@@ -155,10 +176,17 @@ export function StructureEdit(props: Props) {
                   style={{ width: "6ric" }}
                   value={structure.end}
                   onValueChange={(e) => {
-                    structure.end = Number.parseInt(e.formattedValue) || 0;
-                    props.setSelectedRoute(
-                      structuredClone(props.selectedRoute),
-                    );
+                    updateSelectedRoute((route) => ({
+                      ...route,
+                      structures: route.structures.map((v, i) =>
+                        i === index
+                          ? {
+                              ...v,
+                              end: Number.parseInt(e.formattedValue) || 0,
+                            }
+                          : v,
+                      ),
+                    }));
                   }}
                 />
                 m
@@ -167,9 +195,10 @@ export function StructureEdit(props: Props) {
             <Button
               variant="outline"
               onClick={() => {
-                props.selectedRoute.structures =
-                  props.selectedRoute.structures.filter((_, i) => i !== index);
-                props.setSelectedRoute(structuredClone(props.selectedRoute));
+                updateSelectedRoute((route) => ({
+                  ...route,
+                  structures: route.structures.filter((_, i) => i !== index),
+                }));
               }}
             >
               削除

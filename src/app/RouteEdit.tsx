@@ -1,16 +1,12 @@
 import { Button, Textarea, TextInput } from "@mantine/core";
-import { getDefaultRoute, Route } from "../model/route";
-import { State } from "../model/state";
+import { getDefaultRoute } from "../model/route";
 import { useRef, useState } from "react";
+import { useRouteStore, useSelectedRoute } from "../store";
 
-interface Props {
-  routes: Route[];
-  selectedRoute: Route;
-  setState: (state: State) => void;
-  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
-}
+export function RouteEdit() {
+  const { state, setState, setSelectedRouteId } = useRouteStore();
+  const selectedRoute = useSelectedRoute();
 
-export function RouteEdit(props: Props) {
   const [inputTerrain, setInputTerrain] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
@@ -38,14 +34,12 @@ export function RouteEdit(props: Props) {
           <Button
             variant="outline"
             onClick={() => {
-              const currentIndex =
-                props.routes
-                  .map((v, i) => (v.id === props.selectedRoute.id ? i : null))
-                  .find((v) => v != null) || 0;
-              props.routes[currentIndex] = props.selectedRoute;
-              props.routes.push(getDefaultRoute());
-              props.setState({ routes: props.routes });
-              props.setSelectedRoute(props.routes[props.routes.length - 1]);
+              const route = getDefaultRoute();
+              setState((state) => ({
+                ...state,
+                routes: [...state.routes, route],
+              }));
+              setSelectedRouteId(route.id);
             }}
           >
             路線追加
@@ -60,32 +54,37 @@ export function RouteEdit(props: Props) {
           padding: "0.5em",
         }}
       >
-        {props.routes.map((v, i) => (
+        {state.routes.map((v, i) => (
           <div
             key={v.id}
             style={{
               display: "flex",
-              border:
-                v.id === props.selectedRoute.id ? "2px solid #b4daff" : "",
-              padding: v.id === props.selectedRoute.id ? "2px" : "4px",
+              border: v.id === selectedRoute.id ? "2px solid #b4daff" : "",
+              padding: v.id === selectedRoute.id ? "2px" : "4px",
               gap: "0.25em",
             }}
           >
             <TextInput
               style={{ width: "6ric", flex: "1" }}
               onChange={(e) => {
-                v.name = e.target.value;
-                props.setState({ routes: [...props.routes] });
+                setState((state) => ({
+                  ...state,
+                  routes: state.routes.map((route) =>
+                    v.id === route.id ? { ...v, name: e.target.name } : route,
+                  ),
+                }));
               }}
               value={v.name}
             ></TextInput>
             <Button
               variant="outline"
               onClick={() => {
-                props.setState({
-                  routes: props.routes.filter((v1) => v.id !== v1.id),
-                });
-                props.setSelectedRoute(props.routes[props.routes.length - 1]);
+                if (state.routes.length === 1) return;
+                setState((state) => ({
+                  ...state,
+                  routes: state.routes.filter((route) => route.id !== v.id),
+                }));
+                setSelectedRouteId(state.routes[0].id);
               }}
             >
               削除
@@ -102,15 +101,7 @@ export function RouteEdit(props: Props) {
             <Button
               variant="contained"
               onClick={() => {
-                const currentIndex =
-                  props.routes
-                    .map((v, i) => (v.id === props.selectedRoute.id ? i : null))
-                    .find((v) => v != null) || 0;
-                props.routes[currentIndex] = props.selectedRoute;
-                props.setState({ routes: [...props.routes] });
-                props.setSelectedRoute(
-                  props.routes.find((v1) => v.id === v1.id) || props.routes[0],
-                );
+                setSelectedRouteId(v.id);
               }}
             >
               選択
@@ -125,17 +116,26 @@ export function RouteEdit(props: Props) {
         />
         <Button
           onClick={() => {
-            props.routes[selectedRouteIndex].terrains = inputTerrain
-              .split("\n")
-              .slice(1)
-              .map((v) => v.split("\t").map((v) => v.trim()))
-              .map((v) => ({
-                distance: Number.parseFloat(v[0]),
-                x: Number.parseFloat(v[1]),
-                y: Number.parseFloat(v[2]),
-                z: Number.parseFloat(v[3]),
-              }));
-            props.setState({ routes: props.routes });
+            setState((state) => ({
+              ...state,
+              routes: state.routes.map((route, index) =>
+                index === selectedRouteIndex
+                  ? {
+                      ...route,
+                      terrains: inputTerrain
+                        .split("\n")
+                        .slice(1)
+                        .map((v) => v.split("\t").map((v) => v.trim()))
+                        .map((v) => ({
+                          distance: Number.parseFloat(v[0]),
+                          x: Number.parseFloat(v[1]),
+                          y: Number.parseFloat(v[2]),
+                          z: Number.parseFloat(v[3]),
+                        })),
+                    }
+                  : route,
+              ),
+            }));
             dialogRef.current?.close();
           }}
         >

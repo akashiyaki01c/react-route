@@ -1,15 +1,19 @@
 import { Button, NumberInput } from "@mantine/core";
 import { Route } from "../model/route";
-import { State } from "../model/state";
+import { useRouteStore, useSelectedRoute } from "../store";
 
-interface Props {
-  routes: Route[];
-  selectedRoute: Route;
-  setState: (state: State) => void;
-  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
-}
+export function GradientEdit() {
+  const { setState } = useRouteStore();
+  const selectedRoute = useSelectedRoute();
+  const updateSelectedRoute = (updater: (route: Route) => Route) => {
+    setState((state) => ({
+      ...state,
+      routes: state.routes.map((route) =>
+        route.id === selectedRoute.id ? updater(route) : route,
+      ),
+    }));
+  };
 
-export function GradientEdit(props: Props) {
   return (
     <div
       style={{
@@ -40,11 +44,12 @@ export function GradientEdit(props: Props) {
           <Button
             variant="white"
             onClick={() => {
-              props.selectedRoute.gradients =
-                props.selectedRoute.gradients.sort(
+              updateSelectedRoute((route) => ({
+                ...route,
+                gradients: route.gradients.toSorted(
                   (a, b) => a.position - b.position,
-                );
-              props.setSelectedRoute({ ...props.selectedRoute });
+                ),
+              }));
             }}
           >
             勾配ソート
@@ -52,29 +57,43 @@ export function GradientEdit(props: Props) {
           <Button
             variant="outline"
             onClick={() => {
-              props.selectedRoute.gradients.push({
-                position: 0,
-                value: 0,
-              });
-              props.setSelectedRoute({ ...props.selectedRoute });
+              updateSelectedRoute((route) => ({
+                ...route,
+                gradients: [
+                  ...route.gradients,
+                  {
+                    position: 0,
+                    value: 0,
+                  },
+                ],
+              }));
             }}
           >
             勾配追加
           </Button>
         </div>
       </div>
-	  <div style={{display: "flex", alignItems: "center", gap: "0.5em", paddingLeft: "1em"}}>
-          開始標高
-          <NumberInput
-            style={{ width: "6ric" }}
-            value={props.selectedRoute.startEvelation}
-            onValueChange={(e) => {
-              props.selectedRoute.startEvelation = Number.parseInt(e.formattedValue) || 0;
-              props.setSelectedRoute({ ...props.selectedRoute });
-            }}
-          />
-          m
-        </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5em",
+          paddingLeft: "1em",
+        }}
+      >
+        開始標高
+        <NumberInput
+          style={{ width: "6ric" }}
+          value={selectedRoute.startEvelation}
+          onValueChange={(e) => {
+            updateSelectedRoute((route) => ({
+              ...route,
+              startEvelation: Number.parseInt(e.formattedValue) || 0,
+            }));
+          }}
+        />
+        m
+      </div>
       <div
         style={{
           height: "10em",
@@ -83,9 +102,9 @@ export function GradientEdit(props: Props) {
           padding: "2.5%",
         }}
       >
-        {props.selectedRoute.gradients.map((crossing, index) => (
+        {selectedRoute.gradients.map((gradient, index) => (
           <div
-            key={crossing.position}
+            key={gradient.position}
             style={{ display: "flex", justifyContent: "space-between" }}
           >
             <div style={{ display: "flex", gap: "0.5em" }}>
@@ -95,10 +114,19 @@ export function GradientEdit(props: Props) {
                 距離程
                 <NumberInput
                   style={{ width: "6ric" }}
-                  value={crossing.position}
+                  value={gradient.position}
                   onValueChange={(e) => {
-                    crossing.position = Number.parseInt(e.formattedValue) || 0;
-                    props.setSelectedRoute({ ...props.selectedRoute });
+                    updateSelectedRoute((route) => ({
+                      ...route,
+                      gradients: route.gradients.map((v, i) =>
+                        i === index
+                          ? {
+                              ...v,
+                              position: Number.parseInt(e.formattedValue) || 0,
+                            }
+                          : v,
+                      ),
+                    }));
                   }}
                 />
                 m
@@ -109,10 +137,19 @@ export function GradientEdit(props: Props) {
                 勾配
                 <NumberInput
                   style={{ width: "6ric" }}
-                  value={crossing.value}
+                  value={gradient.value}
                   onValueChange={(e) => {
-                    crossing.value = Number.parseInt(e.formattedValue) || 0;
-                    props.setSelectedRoute({ ...props.selectedRoute });
+                    updateSelectedRoute((route) => ({
+                      ...route,
+                      gradients: route.gradients.map((v, i) =>
+                        i === index
+                          ? {
+                              ...v,
+                              value: Number.parseInt(e.formattedValue) || 0,
+                            }
+                          : v,
+                      ),
+                    }));
                   }}
                 />
                 ‰
@@ -121,9 +158,10 @@ export function GradientEdit(props: Props) {
             <Button
               variant="outline"
               onClick={() => {
-                props.selectedRoute.gradients =
-                  props.selectedRoute.gradients.filter((_, i) => i !== index);
-                props.setSelectedRoute({ ...props.selectedRoute });
+                updateSelectedRoute((route) => ({
+                  ...route,
+                  gradients: route.gradients.filter((_, i) => i !== index),
+                }));
               }}
             >
               削除

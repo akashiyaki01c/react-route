@@ -1,15 +1,19 @@
 import { Button, NumberInput, TextInput } from "@mantine/core";
 import { Route } from "../model/route";
-import { State } from "../model/state";
+import { useRouteStore, useSelectedRoute } from "../store";
 
-interface Props {
-  routes: Route[];
-  selectedRoute: Route;
-  setState: (state: State) => void;
-  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
-}
+export function StationEdit() {
+  const { setState } = useRouteStore();
+  const selectedRoute = useSelectedRoute();
+  const updateSelectedRoute = (updater: (route: Route) => Route) => {
+    setState((state) => ({
+      ...state,
+      routes: state.routes.map((route) =>
+        route.id === selectedRoute.id ? updater(route) : route,
+      ),
+    }));
+  };
 
-export function StationEdit(props: Props) {
   return (
     <div
       style={{
@@ -40,10 +44,12 @@ export function StationEdit(props: Props) {
           <Button
             variant="white"
             onClick={() => {
-              props.selectedRoute.stations = props.selectedRoute.stations.sort(
-                (a, b) => a.distance - b.distance,
-              );
-              props.setSelectedRoute({ ...props.selectedRoute });
+              updateSelectedRoute((route) => ({
+                ...route,
+                stations: route.stations.toSorted(
+                  (a, b) => a.distance - b.distance,
+                ),
+              }));
             }}
           >
             駅ソート
@@ -51,12 +57,17 @@ export function StationEdit(props: Props) {
           <Button
             variant="outline"
             onClick={() => {
-              props.selectedRoute.stations.push({
-				  id: crypto.randomUUID(),
-				  name: "",
-				  distance: 0
-			  });
-              props.setSelectedRoute({ ...props.selectedRoute });
+              updateSelectedRoute((route) => ({
+                ...route,
+                stations: [
+                  ...route.stations,
+                  {
+                    id: crypto.randomUUID(),
+                    name: "",
+                    distance: 0,
+                  },
+                ],
+              }));
             }}
           >
             駅追加
@@ -71,7 +82,7 @@ export function StationEdit(props: Props) {
           padding: "2.5%",
         }}
       >
-        {props.selectedRoute.stations.map((station, index) => (
+        {selectedRoute.stations.map((station) => (
           <div
             key={station.id}
             style={{ display: "flex", justifyContent: "space-between" }}
@@ -86,8 +97,14 @@ export function StationEdit(props: Props) {
                   type="text"
                   value={station.name}
                   onChange={(e) => {
-                    station.name = e.target.value;
-                    props.setSelectedRoute({ ...props.selectedRoute });
+                    updateSelectedRoute((route) => ({
+                      ...route,
+                      stations: route.stations.map((v) =>
+                        v.id === station.id
+                          ? { ...v, name: e.target.value }
+                          : v,
+                      ),
+                    }));
                   }}
                 />
               </div>
@@ -99,8 +116,17 @@ export function StationEdit(props: Props) {
                   style={{ width: "6ric" }}
                   value={station.distance}
                   onValueChange={(e) => {
-                    station.distance = Number.parseInt(e.formattedValue) || 0;
-                    props.setSelectedRoute({ ...props.selectedRoute });
+                    updateSelectedRoute((route) => ({
+                      ...route,
+                      stations: route.stations.map((v) =>
+                        v.id === station.id
+                          ? {
+                              ...v,
+                              distance: Number.parseInt(e.formattedValue) || 0,
+                            }
+                          : v,
+                      ),
+                    }));
                   }}
                 />
                 m
@@ -109,9 +135,10 @@ export function StationEdit(props: Props) {
             <Button
               variant="outline"
               onClick={() => {
-                props.selectedRoute.stations =
-                  props.selectedRoute.stations.filter((_, i) => i !== index);
-                props.setSelectedRoute({ ...props.selectedRoute });
+                updateSelectedRoute((route) => ({
+                  ...route,
+                  stations: route.stations.filter((v) => v.id !== station.id),
+                }));
               }}
             >
               削除

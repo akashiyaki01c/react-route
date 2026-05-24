@@ -6,6 +6,7 @@ import {
   GetCurveEndDistance,
   GetIA,
 } from "./model/distance";
+import { useSelectedRoute } from "./store";
 
 const roundUpMultiple = (value: number, multiple: number): number =>
   Math.ceil(value / multiple) * multiple;
@@ -92,15 +93,12 @@ const getCurves = (selectedRoute: Route) => {
 };
 
 interface Props {
-  selectedRoute: Route;
   pointerDistance: number;
   setPointerDistance: React.Dispatch<React.SetStateAction<number>>;
 }
-export function Vertical({
-  selectedRoute,
-  pointerDistance,
-  setPointerDistance,
-}: Props) {
+export function Vertical({ pointerDistance, setPointerDistance }: Props) {
+  const selectedRoute = useSelectedRoute();
+
   const svgRef = useRef<SVGSVGElement>(null);
   const curves = useMemo(() => getCurves(selectedRoute), [selectedRoute]);
 
@@ -109,35 +107,41 @@ export function Vertical({
   const marginEdge = 50;
   const startZ = selectedRoute.startEvelation;
 
-  const startDistance = roundDownMultiple(
-    selectedRoute.terrains[0]?.distance || 0,
-    10,
+  const startDistance = useMemo(
+    () => roundDownMultiple(selectedRoute.terrains[0]?.distance || 0, 10),
+    [selectedRoute.terrains],
   );
-  const endDistance = roundUpMultiple(
-    selectedRoute.terrains[selectedRoute.terrains.length - 1]?.distance || 0,
-    10,
+  const endDistance = useMemo(
+    () =>
+      roundUpMultiple(
+        selectedRoute.terrains[selectedRoute.terrains.length - 1]?.distance ||
+          0,
+        10,
+      ),
+    [selectedRoute.terrains],
   );
-  const lowerZ =
-    roundDownMultiple(
-      selectedRoute.terrains.reduce(
-        (p, c) => Math.min(p, c.z),
-        Number.MAX_VALUE,
-      ) || 0,
-      10,
-    ) - 20;
-  const higherZ =
-    roundUpMultiple(
-      selectedRoute.terrains.reduce(
-        (p, c) => Math.max(p, c.z),
-        Number.MIN_VALUE,
-      ) || 0,
-      10,
-    ) + 20;
-
-  const getTerrainXCoord = (distance: number) =>
-    (distance - startDistance) / xScale;
-  const getTerrainYCoord = (distance: number) =>
-    (higherZ - distance - lowerZ) / yScale;
+  const lowerZ = useMemo(
+    () =>
+      roundDownMultiple(
+        selectedRoute.terrains.reduce(
+          (p, c) => Math.min(p, c.z),
+          Number.MAX_VALUE,
+        ) || 0,
+        10,
+      ) - 20,
+    [selectedRoute.terrains],
+  );
+  const higherZ = useMemo(
+    () =>
+      roundUpMultiple(
+        selectedRoute.terrains.reduce(
+          (p, c) => Math.max(p, c.z),
+          Number.MIN_VALUE,
+        ) || 0,
+        10,
+      ) + 20,
+    [selectedRoute.terrains],
+  );
 
   /* const handleDownload = () => {
     if (!svgRef.current) return;
@@ -154,101 +158,154 @@ export function Vertical({
     URL.revokeObjectURL(url);
   }; */
 
-  const terrainPath =
-    `M ${getTerrainXCoord(selectedRoute.terrains[0]?.distance)},${getTerrainYCoord(selectedRoute.terrains[0]?.z)} L` +
-    selectedRoute.terrains
-      .slice(1)
-      .map((v) => `${getTerrainXCoord(v.distance)},${getTerrainYCoord(v.z)}`)
-      .join(" ");
+  /// 地形
+  const terrainElements = useMemo(() => {
+    const getTerrainXCoord = (distance: number) =>
+      (distance - startDistance) / xScale;
+    const getTerrainYCoord = (distance: number) =>
+      (higherZ - distance - lowerZ) / yScale;
 
-  const terrainVerticalLines = [];
-  for (let i = startDistance; i < endDistance; i += 20) {
-    const target = selectedRoute.terrains.find((v) => v.distance === i);
-    if (!target) {
-      continue;
-    }
-    terrainVerticalLines.push(
+    const result = [];
+    const terrainPath =
+      `M ${getTerrainXCoord(selectedRoute.terrains[0]?.distance)},${getTerrainYCoord(selectedRoute.terrains[0]?.z)} L` +
+      selectedRoute.terrains
+        .slice(1)
+        .map((v) => `${getTerrainXCoord(v.distance)},${getTerrainYCoord(v.z)}`)
+        .join(" ");
+    result.push(
       <path
-        d={`M ${getTerrainXCoord(i)},${getTerrainYCoord(target.z)} V ${getTerrainYCoord(lowerZ)}`}
+        d={terrainPath}
         stroke="black"
         fill="transparent"
         strokeWidth={0.5}
-      ></path>,
+      />,
     );
-  }
 
-  let railPath = "";
-  {
-    let currentZ = startZ;
-    let currentDistance = startDistance;
-    const coords = [];
-    coords.push(
-      `M ${getTerrainXCoord(startDistance)} ${getTerrainYCoord(currentZ)}`,
-    );
-    const g = [
-      {
-        position: startDistance,
-        value: 0,
-      } satisfies Gradient,
-      ...selectedRoute.gradients,
-      {
-        position: endDistance,
-        value: 0,
-      } satisfies Gradient,
-    ];
-    for (let i = 1; i < g.length; i++) {
-      const before = g[i - 1];
-      const current = g[i];
-
-      const length = current.position - before.position;
-      currentDistance += length;
-      const diffZ = (before.value * length) / 1000;
-      currentZ += diffZ;
-
-      coords.push(
-        `L ${getTerrainXCoord(currentDistance)} ${getTerrainYCoord(currentZ)}`,
+    for (let i = startDistance; i < endDistance; i += 20) {
+      const target = selectedRoute.terrains.find((v) => v.distance === i);
+      if (!target) {
+        continue;
+      }
+      result.push(
+        <path
+          d={`M ${getTerrainXCoord(i)},${getTerrainYCoord(target.z)} V ${getTerrainYCoord(lowerZ)}`}
+          stroke="black"
+          fill="transparent"
+          strokeWidth={0.5}
+        ></path>,
       );
     }
+    return result;
+  }, [endDistance, higherZ, lowerZ, selectedRoute.terrains, startDistance]);
 
-    railPath = coords.join(" ");
-  }
+  /// 軌条面
+  const railElement = useMemo(() => {
+    const getTerrainXCoord = (distance: number) =>
+      (distance - startDistance) / xScale;
+    const getTerrainYCoord = (distance: number) =>
+      (higherZ - distance - lowerZ) / yScale;
 
-  const stationsValue = [];
-  for (const sta of selectedRoute.stations) {
-    const staZ =
-      selectedRoute.terrains.find(
-        (v) => v.distance === Math.floor(sta.distance),
-      )?.z || 0;
-    stationsValue.push(
-      <path
-        d={`M ${getTerrainXCoord(sta.distance)} ${getTerrainYCoord(lowerZ)} V ${getTerrainYCoord(staZ + 30)}`}
-        stroke="black"
-        fill="transparent"
-        strokeWidth={0.5}
-      ></path>,
-    );
-    stationsValue.push(
-      <circle
-        cx={getTerrainXCoord(sta.distance)}
-        cy={getTerrainYCoord(staZ + 20)}
-        r={5}
-        stroke="black"
-        fill="transparent"
-        strokeWidth={0.5}
-      ></circle>,
-    );
-    stationsValue.push(
-      getHataage(
-        getTerrainXCoord(sta.distance),
-        getTerrainYCoord(staZ + 30),
-        `${sta.name || sta.name}停車場中心`,
-        getDistanceStrShort(sta.distance),
-      ),
-    );
-  }
+    let railPath = "";
+    {
+      let currentZ = startZ;
+      let currentDistance = startDistance;
+      const coords = [];
+      coords.push(
+        `M ${getTerrainXCoord(startDistance)} ${getTerrainYCoord(currentZ)}`,
+      );
+      const g = [
+        {
+          position: startDistance,
+          value: 0,
+        } satisfies Gradient,
+        ...selectedRoute.gradients,
+        {
+          position: endDistance,
+          value: 0,
+        } satisfies Gradient,
+      ];
+      for (let i = 1; i < g.length; i++) {
+        const before = g[i - 1];
+        const current = g[i];
 
-  const structuresValue = [];
-  {
+        const length = current.position - before.position;
+        currentDistance += length;
+        const diffZ = (before.value * length) / 1000;
+        currentZ += diffZ;
+
+        coords.push(
+          `L ${getTerrainXCoord(currentDistance)} ${getTerrainYCoord(currentZ)}`,
+        );
+      }
+      railPath = coords.join(" ");
+    }
+    return (
+      <path d={railPath} stroke="black" fill="transparent" strokeWidth={1} />
+    );
+  }, [
+    endDistance,
+    higherZ,
+    lowerZ,
+    selectedRoute.gradients,
+    startDistance,
+    startZ,
+  ]);
+
+  /// 駅関係
+  const stationElements = useMemo(() => {
+    const getTerrainXCoord = (distance: number) =>
+      (distance - startDistance) / xScale;
+    const getTerrainYCoord = (distance: number) =>
+      (higherZ - distance - lowerZ) / yScale;
+
+    const result = [];
+    for (const sta of selectedRoute.stations) {
+      const staZ =
+        selectedRoute.terrains.find(
+          (v) => v.distance === Math.floor(sta.distance),
+        )?.z || 0;
+      result.push(
+        <path
+          d={`M ${getTerrainXCoord(sta.distance)} ${getTerrainYCoord(lowerZ)} V ${getTerrainYCoord(staZ + 30)}`}
+          stroke="black"
+          fill="transparent"
+          strokeWidth={0.5}
+        ></path>,
+      );
+      result.push(
+        <circle
+          cx={getTerrainXCoord(sta.distance)}
+          cy={getTerrainYCoord(staZ + 20)}
+          r={5}
+          stroke="black"
+          fill="transparent"
+          strokeWidth={0.5}
+        ></circle>,
+      );
+      result.push(
+        getHataage(
+          getTerrainXCoord(sta.distance),
+          getTerrainYCoord(staZ + 30),
+          `${sta.name || sta.name}停車場中心`,
+          getDistanceStrShort(sta.distance),
+        ),
+      );
+    }
+    return result;
+  }, [
+    higherZ,
+    lowerZ,
+    selectedRoute.stations,
+    selectedRoute.terrains,
+    startDistance,
+  ]);
+
+  /// 構造物関係
+  const structuresElements = useMemo(() => {
+    const getTerrainXCoord = (distance: number) =>
+      (distance - startDistance) / xScale;
+    const getTerrainYCoord = (distance: number) =>
+      (higherZ - distance - lowerZ) / yScale;
     function getEveration(distance: number): {
       everation: number;
       gradient: number;
@@ -273,6 +330,7 @@ export function Vertical({
       return { everation, gradient };
     }
 
+    const result = [];
     for (const structure of selectedRoute.structures) {
       const points = [];
       const everation = getEveration(structure.start);
@@ -315,7 +373,7 @@ export function Vertical({
         `L ${getTerrainXCoord(structure.end)} ${getTerrainYCoord(nowHeight)}`,
       );
 
-      structuresValue.push(
+      result.push(
         <path
           d={points.join(" ")}
           stroke="black"
@@ -334,7 +392,7 @@ export function Vertical({
               v.distance ===
               roundUpMultiple((structure.start + structure.end) / 2, 10),
           )?.z || 0;
-        structuresValue.push(
+        result.push(
           <path
             d={`M ${getTerrainXCoord((structure.start + structure.end) / 2)} ${getTerrainYCoord(railZ + 5)} V ${getTerrainYCoord(terrainZ + 15)}`}
             stroke="black"
@@ -342,7 +400,7 @@ export function Vertical({
             strokeWidth={0.5}
           ></path>,
         );
-        structuresValue.push(
+        result.push(
           getHataage(
             getTerrainXCoord((structure.start + structure.end) / 2),
             getTerrainYCoord(terrainZ + 15),
@@ -354,7 +412,7 @@ export function Vertical({
         const elevation = getEveration(
           (structure.start + structure.end) / 2,
         ).everation;
-        structuresValue.push(
+        result.push(
           <path
             d={`M ${getTerrainXCoord((structure.start + structure.end) / 2)} ${getTerrainYCoord(elevation)} V ${getTerrainYCoord(elevation + 25)}`}
             stroke="black"
@@ -362,7 +420,7 @@ export function Vertical({
             strokeWidth={0.5}
           ></path>,
         );
-        structuresValue.push(
+        result.push(
           getHataage(
             getTerrainXCoord((structure.start + structure.end) / 2),
             getTerrainYCoord(elevation + 25),
@@ -372,18 +430,60 @@ export function Vertical({
         );
       }
     }
-    // 踏切
+    return result;
+  }, [
+    endDistance,
+    higherZ,
+    lowerZ,
+    selectedRoute.gradients,
+    selectedRoute.structures,
+    selectedRoute.terrains,
+    startDistance,
+    startZ,
+  ]);
+
+  /// 踏切関係
+  const crossingElements = useMemo(() => {
+    const getTerrainXCoord = (distance: number) =>
+      (distance - startDistance) / xScale;
+    const getTerrainYCoord = (distance: number) =>
+      (higherZ - distance - lowerZ) / yScale;
+    function getEveration(distance: number): {
+      everation: number;
+      gradient: number;
+    } {
+      if (distance >= endDistance) {
+        return { everation: 0, gradient: 0 };
+      }
+
+      let everation = startZ;
+      let gradient = 0;
+      for (let i = 0; i < distance; i++) {
+        everation += gradient / 1000;
+
+        const gradientChange = selectedRoute.gradients.find(
+          (v) => v.position === i,
+        );
+        if (gradientChange) {
+          gradient = gradientChange.value;
+        }
+      }
+
+      return { everation, gradient };
+    }
+
+    const result = [];
     for (const crossing of selectedRoute.crossings) {
       const elevation = getEveration(crossing.distance).everation;
-      structuresValue.push(
-          <path
-            d={`M ${getTerrainXCoord(crossing.distance)} ${getTerrainYCoord(elevation)} V ${getTerrainYCoord(elevation + 25)}`}
-            stroke="black"
-            fill="transparent"
-            strokeWidth={0.5}
-          ></path>,
-        );
-      structuresValue.push(
+      result.push(
+        <path
+          d={`M ${getTerrainXCoord(crossing.distance)} ${getTerrainYCoord(elevation)} V ${getTerrainYCoord(elevation + 25)}`}
+          stroke="black"
+          fill="transparent"
+          strokeWidth={0.5}
+        ></path>,
+      );
+      result.push(
         getHataage(
           getTerrainXCoord(crossing.distance),
           getTerrainYCoord(elevation + 25),
@@ -392,27 +492,73 @@ export function Vertical({
         ),
       );
     }
-    // 渠橋
+    return result;
+  }, [
+    endDistance,
+    higherZ,
+    lowerZ,
+    selectedRoute.crossings,
+    selectedRoute.gradients,
+    startDistance,
+    startZ,
+  ]);
+
+  const culvertElements = useMemo(() => {
+    const getTerrainXCoord = (distance: number) =>
+      (distance - startDistance) / xScale;
+    const getTerrainYCoord = (distance: number) =>
+      (higherZ - distance - lowerZ) / yScale;
+    function getEveration(distance: number): {
+      everation: number;
+      gradient: number;
+    } {
+      if (distance >= endDistance) {
+        return { everation: 0, gradient: 0 };
+      }
+
+      let everation = startZ;
+      let gradient = 0;
+      for (let i = 0; i < distance; i++) {
+        everation += gradient / 1000;
+
+        const gradientChange = selectedRoute.gradients.find(
+          (v) => v.position === i,
+        );
+        if (gradientChange) {
+          gradient = gradientChange.value;
+        }
+      }
+
+      return { everation, gradient };
+    }
+
+    if (selectedRoute.terrains.length === 0) {
+      return <></>;
+    }
+
+    const result = [];
     for (const culvert of selectedRoute.culverts) {
       const elevation = getEveration(culvert.distance).everation;
-      const terrainElevation = selectedRoute.terrains.find(v => v.distance === culvert.distance)?.z || 0;
-      structuresValue.push(
-          <path
-            d={`M ${getTerrainXCoord(culvert.distance - 5)} ${getTerrainYCoord(terrainElevation)} V ${getTerrainYCoord(terrainElevation + 5)} H ${getTerrainXCoord(culvert.distance + 5)} V ${getTerrainYCoord(terrainElevation)}`}
-            stroke="black"
-            fill="transparent"
-            strokeWidth={0.5}
-          ></path>,
-        );
-      structuresValue.push(
-          <path
-            d={`M ${getTerrainXCoord(culvert.distance)} ${getTerrainYCoord(elevation)} V ${getTerrainYCoord(elevation + 25)}`}
-            stroke="black"
-            fill="transparent"
-            strokeWidth={0.5}
-          ></path>,
-        );
-      structuresValue.push(
+      const terrainElevation =
+        selectedRoute.terrains.find((v) => v.distance === culvert.distance)
+          ?.z || 0;
+      result.push(
+        <path
+          d={`M ${getTerrainXCoord(culvert.distance - 5)} ${getTerrainYCoord(terrainElevation)} V ${getTerrainYCoord(terrainElevation + 5)} H ${getTerrainXCoord(culvert.distance + 5)} V ${getTerrainYCoord(terrainElevation)}`}
+          stroke="black"
+          fill="transparent"
+          strokeWidth={0.5}
+        ></path>,
+      );
+      result.push(
+        <path
+          d={`M ${getTerrainXCoord(culvert.distance)} ${getTerrainYCoord(elevation)} V ${getTerrainYCoord(elevation + 25)}`}
+          stroke="black"
+          fill="transparent"
+          strokeWidth={0.5}
+        ></path>,
+      );
+      result.push(
         getHataage(
           getTerrainXCoord(culvert.distance),
           getTerrainYCoord(elevation + 25),
@@ -421,10 +567,25 @@ export function Vertical({
         ),
       );
     }
-  }
+    return result;
+  }, [
+    endDistance,
+    higherZ,
+    lowerZ,
+    selectedRoute.culverts,
+    selectedRoute.gradients,
+    selectedRoute.terrains,
+    startDistance,
+    startZ,
+  ]);
 
   const axisWidth = 50;
   const gradientHeight = 15;
+
+  const getTerrainXCoord = (distance: number) =>
+    (distance - startDistance) / xScale;
+  const getTerrainYCoord = (distance: number) =>
+    (higherZ - distance - lowerZ) / yScale;
 
   const gradientValues = [];
   {
@@ -778,44 +939,40 @@ export function Vertical({
           }}
         >
           <g
-            id="terrain-vertical"
+            id="terrain"
             transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
           >
-            {terrainVerticalLines}
-          </g>
-          <g
-            id="terrain-value"
-            transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
-          >
-            <path
-              d={terrainPath}
-              stroke="black"
-              fill="transparent"
-              strokeWidth={0.5}
-            />
+            {terrainElements}
           </g>
           <g
             id="rail-value"
             transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
           >
-            <path
-              d={railPath}
-              stroke="black"
-              fill="transparent"
-              strokeWidth={1}
-            />
+            {railElement}
           </g>
           <g
             id="stations"
             transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
           >
-            {stationsValue}
+            {stationElements}
           </g>
           <g
             id="structures"
             transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
           >
-            {structuresValue}
+            {structuresElements}
+          </g>
+          <g
+            id="crossings"
+            transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
+          >
+            {crossingElements}
+          </g>
+          <g
+            id="culverts"
+            transform={`translate(${marginEdge + axisWidth} ${marginEdge})`}
+          >
+            {culvertElements}
           </g>
           <g
             id="terrain-axis"

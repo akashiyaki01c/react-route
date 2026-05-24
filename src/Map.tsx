@@ -11,10 +11,10 @@ import { RedRouteView } from "./app/RedRouteView";
 import { RouteView } from "./app/RouteView";
 import { GetLatLngFromDistance, GetTotalDistance } from "./model/distance";
 import { toLatLng } from "./model/convert";
-import { Route } from "./model/route";
 import { Icon } from "leaflet";
 import { OresenView } from "./app/OresenView";
 import { useMemo } from "react";
+import { useRouteStore, useSelectedRoute } from "./store";
 
 interface Props {
   mapClickHandler: ({
@@ -24,8 +24,6 @@ interface Props {
   }) => null;
   handleDragPoint: (index: number, e: unknown) => void;
   handleAddPoint: (lat: number, lng: number) => void;
-  routes: Route[];
-  selectedRoute: Route;
   pointerDistance: number;
 }
 
@@ -55,33 +53,37 @@ const pointerIcon = new Icon({
 });
 
 export function Map(props: Props) {
+  const selectedRoute = useSelectedRoute();
+  const { state } = useRouteStore();
+
+  console.log(state, selectedRoute);
   const pointerXY = GetLatLngFromDistance(
-    props.selectedRoute.points,
+    selectedRoute.points,
     props.pointerDistance,
   );
 
   const kyoritei = useMemo(() => {
     return [
-      ...Array(Math.floor(GetTotalDistance(props.selectedRoute.points) / 1000)),
+      ...Array(Math.floor(GetTotalDistance(selectedRoute.points) / 1000)),
     ].map((_, i) => {
       const xy = GetLatLngFromDistance(
-        props.selectedRoute.points,
+        selectedRoute.points,
         (i + 1) * 1000,
       );
       if (Number.isNaN(xy[0])) xy[0] = 0;
       if (Number.isNaN(xy[1])) xy[1] = 0;
       return (
         <Marker
-          key={`${props.selectedRoute.id}_${i}`}
+          key={`${selectedRoute.id}_${i}`}
           position={toLatLng(xy)}
           icon={distanceIcon}
         ></Marker>
       );
     });
-  }, [props.selectedRoute]);
+  }, [selectedRoute]);
 
   const crossing = useMemo(() => {
-    return props.routes.flatMap((v) =>
+    return state.routes.flatMap((v) =>
       v.crossings.map((station) => {
         const xy = GetLatLngFromDistance(v.points, station.distance);
         if (Number.isNaN(xy[0])) xy[0] = 0;
@@ -97,10 +99,10 @@ export function Map(props: Props) {
         );
       }),
     );
-  }, [props.routes]);
+  }, [state.routes]);
 
   const culverts = useMemo(() => {
-    return props.routes.flatMap((v) =>
+    return state.routes.flatMap((v) =>
       v.culverts.map((culvert) => {
         const xy = GetLatLngFromDistance(v.points, culvert.distance);
         if (Number.isNaN(xy[0])) xy[0] = 0;
@@ -116,19 +118,19 @@ export function Map(props: Props) {
         );
       }),
     );
-  }, [props.routes]);
+  }, [state.routes]);
 
   const selectedStations = useMemo(() => {
-    return props.selectedRoute.stations.map((station) => {
+    return selectedRoute.stations.map((station) => {
       const xy = GetLatLngFromDistance(
-        props.selectedRoute.points,
+        selectedRoute.points,
         station.distance,
       );
       if (Number.isNaN(xy[0])) xy[0] = 0;
       if (Number.isNaN(xy[1])) xy[1] = 0;
       return (
         <Marker
-          key={`${props.selectedRoute.id}_${station.id}`}
+          key={`${selectedRoute.id}_${station.id}`}
           position={toLatLng(xy)}
           icon={selectedStationIcon}
         >
@@ -136,10 +138,10 @@ export function Map(props: Props) {
         </Marker>
       );
     });
-  }, [props.selectedRoute]);
+  }, [selectedRoute]);
   const stations = useMemo(() => {
-    return props.routes
-      .filter((v) => v.id !== props.selectedRoute.id)
+    return state.routes
+      .filter((v) => v.id !== selectedRoute.id)
       .flatMap((v) =>
         v.stations.map((station) => {
           const xy = GetLatLngFromDistance(v.points, station.distance);
@@ -156,7 +158,7 @@ export function Map(props: Props) {
           );
         }),
       );
-  }, [props.routes, props.selectedRoute.id]);
+  }, [selectedRoute.id, state.routes]);
 
   return (
     <div style={{ height: "100%", width: "100%" }}>
@@ -185,16 +187,16 @@ export function Map(props: Props) {
           <LayersControl.Overlay name="路線描画" checked>
             <LayerGroup>
               <RouteView
-                routes={props.routes}
-                selectedRouteId={props.selectedRoute.id}
+                routes={state.routes}
+                selectedRouteId={selectedRoute.id}
               />
-              <SelectedRouteView selectedRoute={props.selectedRoute} />
+              <SelectedRouteView selectedRoute={selectedRoute} />
               {/* 赤線描画 */}
-              <RedRouteView selectedRoute={props.selectedRoute} />
+              <RedRouteView selectedRoute={selectedRoute} />
 
               {/* 折れ点マーカー描画 */}
               <OresenView
-                selectedRoute={props.selectedRoute}
+                selectedRoute={selectedRoute}
                 handleDragPoint={props.handleDragPoint}
               />
             </LayerGroup>

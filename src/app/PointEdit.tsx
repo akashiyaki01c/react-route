@@ -1,20 +1,12 @@
 import { Button, TextInput } from "@mantine/core";
-import { Route } from "../model/route";
-import { State } from "../model/state";
 import {
   GetCurveBeginDistance,
   GetCurveEndDistance,
   GetIA,
   GetTotalDistance,
 } from "../model/distance";
-
-interface Props {
-  routes: Route[];
-  selectedRoute: Route;
-  setState: (state: State) => void;
-  setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
-  handleDeletePoint: (id: string) => void;
-}
+import { useRouteStore, useSelectedRoute } from "../store";
+import { Route } from "../model/route";
 
 const getDistanceStr = (distance: number) => {
   const rawKilo = distance / 1000;
@@ -35,7 +27,22 @@ const decimalToDMS = (decimalDeg: number): string => {
   return `${deg}°${pad(min, 2)}'${pad(sec, 2)}"${pad(secFraction, 2)}`;
 };
 
+interface Props {
+  handleDeletePoint: (id: string) => void;
+}
+
 export function PointEdit(props: Props) {
+  const { setState } = useRouteStore();
+  const selectedRoute = useSelectedRoute();
+  const updateSelectedRoute = (updater: (route: Route) => Route) => {
+    setState((state) => ({
+      ...state,
+      routes: state.routes.map((route) =>
+        route.id === selectedRoute.id ? updater(route) : route,
+      ),
+    }));
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.25em" }}>
       <div
@@ -59,15 +66,13 @@ export function PointEdit(props: Props) {
           <Button
             variant="outline"
             onClick={() => {
-              if (props.selectedRoute.points.length === 0) {
+              if (selectedRoute.points.length === 0) {
                 return;
               }
+
               props.handleDeletePoint(
-                props.selectedRoute.points[
-                  props.selectedRoute.points.length - 1
-                ].id,
+                selectedRoute.points[selectedRoute.points.length - 1].id,
               );
-              props.setSelectedRoute({ ...props.selectedRoute });
             }}
           >
             1点削除
@@ -75,11 +80,10 @@ export function PointEdit(props: Props) {
           <Button
             variant="subtle"
             onClick={() => {
-              if (props.selectedRoute.points.length === 0) {
+              if (selectedRoute.points.length === 0) {
                 return;
               }
-              props.selectedRoute.points = [];
-              props.setSelectedRoute({ ...props.selectedRoute });
+              updateSelectedRoute((route) => ({ ...route, points: [] }));
             }}
           >
             全削除
@@ -94,9 +98,8 @@ export function PointEdit(props: Props) {
           padding: "2.5%",
         }}
       >
-        {props.selectedRoute.points.map((point, index) => {
-          const isEdge =
-            index == 0 || index == props.selectedRoute.points.length - 1;
+        {selectedRoute.points.map((point, index) => {
+          const isEdge = index == 0 || index == selectedRoute.points.length - 1;
           return (
             <div
               key={point.id}
@@ -118,15 +121,25 @@ export function PointEdit(props: Props) {
                     type="number"
                     style={{ width: "4ric" }}
                     value={point.curveRadius}
-                    onChange={(v) => {
-                      point.curveRadius = Number.parseInt(v.target.value) || 0;
-                      props.setSelectedRoute({ ...props.selectedRoute });
+                    onChange={(e) => {
+                      updateSelectedRoute((route) => ({
+                        ...route,
+                        points: route.points.map((v, i) =>
+                          i === index
+                            ? {
+                                ...v,
+                                curveRadius:
+                                  Number.parseInt(e.target.value) || 0,
+                              }
+                            : v,
+                        ),
+                      }));
                     }}
                   />
                   m
                 </div>
               )}
-              <div style={{fontSize: "0.75em"}}>
+              <div style={{ fontSize: "0.75em" }}>
                 <div>
                   {isEdge ? (
                     <></>
@@ -134,10 +147,7 @@ export function PointEdit(props: Props) {
                     <div style={{ fontFamily: "monospace" }}>
                       BC{" "}
                       {getDistanceStr(
-                        GetCurveBeginDistance(
-                          props.selectedRoute.points,
-                          index,
-                        ),
+                        GetCurveBeginDistance(selectedRoute.points, index),
                       )}
                     </div>
                   )}
@@ -149,7 +159,7 @@ export function PointEdit(props: Props) {
                     <div style={{ fontFamily: "monospace" }}>
                       EC{" "}
                       {getDistanceStr(
-                        GetCurveEndDistance(props.selectedRoute.points, index),
+                        GetCurveEndDistance(selectedRoute.points, index),
                       )}
                     </div>
                   )}
@@ -162,9 +172,9 @@ export function PointEdit(props: Props) {
                       IA{" "}
                       {decimalToDMS(
                         GetIA(
-                          props.selectedRoute.points[index - 1].coord,
-                          props.selectedRoute.points[index].coord,
-                          props.selectedRoute.points[index + 1].coord,
+                          selectedRoute.points[index - 1].coord,
+                          selectedRoute.points[index].coord,
+                          selectedRoute.points[index + 1].coord,
                         ).ia,
                       )}
                     </div>
@@ -175,7 +185,7 @@ export function PointEdit(props: Props) {
           );
         })}
         <div style={{ fontFamily: "monospace" }}>
-          全長 {getDistanceStr(GetTotalDistance(props.selectedRoute.points))}
+          全長 {getDistanceStr(GetTotalDistance(selectedRoute.points))}
         </div>
       </div>
     </div>
