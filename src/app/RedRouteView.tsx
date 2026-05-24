@@ -4,7 +4,6 @@ import { Route } from "../model/route";
 import { getCircleBeginPosition, getCircleEndPosition } from "../model/distance";
 
 interface Props {
-  routes: Route[];
   selectedRoute: Route;
 }
 

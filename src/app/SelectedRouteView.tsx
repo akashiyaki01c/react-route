@@ -1,11 +1,17 @@
 import { JSX } from "react";
 import { Route } from "../model/route";
-import { getCircleBeginPosition, getCircleCenterPosition, getCircleEndPosition, getShortestArc, isClockwise, normalizeAngle } from "../model/distance";
+import {
+  getCircleBeginPosition,
+  getCircleCenterPosition,
+  getCircleEndPosition,
+  getShortestArc,
+  isClockwise,
+  normalizeAngle,
+} from "../model/distance";
 import { Circle, Polyline } from "react-leaflet";
 import { toLatLng } from "../model/convert";
 
 interface Props {
-  routes: Route[];
   selectedRoute: Route;
 }
 
@@ -99,6 +105,11 @@ export function SelectedRouteView(props: Props) {
         })
         .flat()
         .filter((v) => v != null)}
+      <Polyline
+        positions={props.selectedRoute.points.map((v) => toLatLng(v.coord))}
+        color="black"
+        weight={1}
+      ></Polyline>
     </>
   );
 }

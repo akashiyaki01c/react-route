@@ -3,7 +3,6 @@ import {
   LayersControl,
   MapContainer,
   Marker,
-  Polyline,
   Popup,
   TileLayer,
 } from "react-leaflet";
@@ -14,6 +13,8 @@ import { GetLatLngFromDistance, GetTotalDistance } from "./model/distance";
 import { toLatLng } from "./model/convert";
 import { Route } from "./model/route";
 import { Icon } from "leaflet";
+import { OresenView } from "./app/OresenView";
+import { useMemo } from "react";
 
 interface Props {
   mapClickHandler: ({
@@ -23,8 +24,9 @@ interface Props {
   }) => null;
   handleDragPoint: (index: number, e: unknown) => void;
   handleAddPoint: (lat: number, lng: number) => void;
-  routes: Route[],
-  selectedRoute: Route,
+  routes: Route[];
+  selectedRoute: Route;
+  pointerDistance: number;
 }
 
 const stationIcon = new Icon({
@@ -39,18 +41,125 @@ const distanceIcon = new Icon({
   iconUrl: "/images/distance.svg",
   iconSize: [20, 20],
 });
-const pointIcon = new Icon({
-  iconUrl: "/images/point.svg",
-  iconSize: [10, 10],
-});
 const crossingIcon = new Icon({
   iconUrl: "/images/crossing.svg",
   iconSize: [20, 20],
 });
+const culvertIcon = new Icon({
+  iconUrl: "/images/culvert.svg",
+  iconSize: [20, 20],
+});
+const pointerIcon = new Icon({
+  iconUrl: "/images/pointer.svg",
+  iconSize: [10, 10],
+});
 
 export function Map(props: Props) {
+  const pointerXY = GetLatLngFromDistance(
+    props.selectedRoute.points,
+    props.pointerDistance,
+  );
+
+  const kyoritei = useMemo(() => {
+    return [
+      ...Array(Math.floor(GetTotalDistance(props.selectedRoute.points) / 1000)),
+    ].map((_, i) => {
+      const xy = GetLatLngFromDistance(
+        props.selectedRoute.points,
+        (i + 1) * 1000,
+      );
+      if (Number.isNaN(xy[0])) xy[0] = 0;
+      if (Number.isNaN(xy[1])) xy[1] = 0;
+      return (
+        <Marker
+          key={`${props.selectedRoute.id}_${i}`}
+          position={toLatLng(xy)}
+          icon={distanceIcon}
+        ></Marker>
+      );
+    });
+  }, [props.selectedRoute]);
+
+  const crossing = useMemo(() => {
+    return props.routes.flatMap((v) =>
+      v.crossings.map((station) => {
+        const xy = GetLatLngFromDistance(v.points, station.distance);
+        if (Number.isNaN(xy[0])) xy[0] = 0;
+        if (Number.isNaN(xy[1])) xy[1] = 0;
+        return (
+          <Marker
+            key={`${v.id}_${station.id}`}
+            position={toLatLng(xy)}
+            icon={crossingIcon}
+          >
+            <Popup>{station.name}踏切</Popup>
+          </Marker>
+        );
+      }),
+    );
+  }, [props.routes]);
+
+  const culverts = useMemo(() => {
+    return props.routes.flatMap((v) =>
+      v.culverts.map((culvert) => {
+        const xy = GetLatLngFromDistance(v.points, culvert.distance);
+        if (Number.isNaN(xy[0])) xy[0] = 0;
+        if (Number.isNaN(xy[1])) xy[1] = 0;
+        return (
+          <Marker
+            key={`${v.id}_${culvert.id}`}
+            position={toLatLng(xy)}
+            icon={culvertIcon}
+          >
+            <Popup>{culvert.name}渠橋</Popup>
+          </Marker>
+        );
+      }),
+    );
+  }, [props.routes]);
+
+  const selectedStations = useMemo(() => {
+    return props.selectedRoute.stations.map((station) => {
+      const xy = GetLatLngFromDistance(
+        props.selectedRoute.points,
+        station.distance,
+      );
+      if (Number.isNaN(xy[0])) xy[0] = 0;
+      if (Number.isNaN(xy[1])) xy[1] = 0;
+      return (
+        <Marker
+          key={`${props.selectedRoute.id}_${station.id}`}
+          position={toLatLng(xy)}
+          icon={selectedStationIcon}
+        >
+          <Popup>{station.name}駅</Popup>
+        </Marker>
+      );
+    });
+  }, [props.selectedRoute]);
+  const stations = useMemo(() => {
+    return props.routes
+      .filter((v) => v.id !== props.selectedRoute.id)
+      .flatMap((v) =>
+        v.stations.map((station) => {
+          const xy = GetLatLngFromDistance(v.points, station.distance);
+          if (Number.isNaN(xy[0])) xy[0] = 0;
+          if (Number.isNaN(xy[1])) xy[1] = 0;
+          return (
+            <Marker
+              key={`${v.id}_${station.id}`}
+              position={toLatLng(xy)}
+              icon={stationIcon}
+            >
+              <Popup>{station.name}駅</Popup>
+            </Marker>
+          );
+        }),
+      );
+  }, [props.routes, props.selectedRoute.id]);
+
   return (
-    <div style={{ height: "100dvh", width: "100%" }}>
+    <div style={{ height: "100%", width: "100%" }}>
       <MapContainer center={[35, 135]} zoom={10} style={{ height: "100%" }}>
         <props.mapClickHandler onAddPoint={props.handleAddPoint} />
         <LayersControl>
@@ -75,135 +184,55 @@ export function Map(props: Props) {
 
           <LayersControl.Overlay name="路線描画" checked>
             <LayerGroup>
-              <RouteView routes={props.routes} selectedRoute={props.selectedRoute} />
-              <SelectedRouteView
+              <RouteView
                 routes={props.routes}
-                selectedRoute={props.selectedRoute}
+                selectedRouteId={props.selectedRoute.id}
               />
-
-              {/* 黒の折れ線描画 */}
-              <Polyline
-                positions={props.selectedRoute.points.map((v) => toLatLng(v.coord))}
-                color="black"
-                weight={1}
-              ></Polyline>
-
+              <SelectedRouteView selectedRoute={props.selectedRoute} />
               {/* 赤線描画 */}
-              <RedRouteView
-                routes={props.routes}
-                selectedRoute={props.selectedRoute}
-              />
+              <RedRouteView selectedRoute={props.selectedRoute} />
 
               {/* 折れ点マーカー描画 */}
-              {props.selectedRoute.points.map((point, index) => {
-                const [lat, lng] = toLatLng(point.coord);
-                return (
-                  <Marker
-                    key={point.id}
-                    position={[lat, lng]}
-                    draggable={true}
-                    icon={pointIcon}
-                    data-xy={point.coord}
-                    eventHandlers={{
-                      dragend: (e) => props.handleDragPoint(index, e), // ドラッグ終了時に新しい位置を更新
-                    }}
-                  />
-                );
-              })}
+              <OresenView
+                selectedRoute={props.selectedRoute}
+                handleDragPoint={props.handleDragPoint}
+              />
             </LayerGroup>
           </LayersControl.Overlay>
 
           <LayersControl.Overlay name="距離程">
             <LayerGroup>
               {/* 距離程描画 */}
-              {[
-                ...Array(
-                  Math.floor(GetTotalDistance(props.selectedRoute.points) / 1000),
-                ),
-              ].map((_, i) => {
-                const xy = GetLatLngFromDistance(
-                  props.selectedRoute.points,
-                  (i + 1) * 1000,
-                );
-                if (Number.isNaN(xy[0])) xy[0] = 0;
-                if (Number.isNaN(xy[1])) xy[1] = 0;
-                return (
-                  <Marker
-                    key={`${props.selectedRoute.id}_${i}`}
-                    position={toLatLng(xy)}
-                    icon={distanceIcon}
-                  ></Marker>
-                );
-              })}
+              {kyoritei}
             </LayerGroup>
           </LayersControl.Overlay>
           <LayersControl.Overlay name="踏切">
             <LayerGroup>
               {/* 踏切マーカー描画 */}
-              {props.routes
-                .flatMap((v) =>
-                  v.crossings.map((station) => {
-                    const xy = GetLatLngFromDistance(
-                      v.points,
-                      station.distance,
-                    );
-                    if (Number.isNaN(xy[0])) xy[0] = 0;
-                    if (Number.isNaN(xy[1])) xy[1] = 0;
-                    return (
-                      <Marker
-                        key={`${v.id}_${station.id}`}
-                        position={toLatLng(xy)}
-                        icon={crossingIcon}
-                      >
-                        <Popup>{station.name}</Popup>
-                      </Marker>
-                    );
-                  }),
-                )}
+              {crossing}
+            </LayerGroup>
+          </LayersControl.Overlay>
+          <LayersControl.Overlay name="渠橋">
+            <LayerGroup>
+              {/* 渠橋マーカー描画 */}
+              {culverts}
             </LayerGroup>
           </LayersControl.Overlay>
           <LayersControl.Overlay name="駅">
             <LayerGroup>
               {/* 駅マーカー描画 */}
-              {props.selectedRoute.stations.map((station) => {
-                const xy = GetLatLngFromDistance(
-                  props.selectedRoute.points,
-                  station.distance,
-                );
-                if (Number.isNaN(xy[0])) xy[0] = 0;
-                if (Number.isNaN(xy[1])) xy[1] = 0;
-                return (
-                  <Marker
-                    key={`${props.selectedRoute.id}_${station.id}`}
-                    position={toLatLng(xy)}
-                    icon={selectedStationIcon}
-                  >
-                    <Popup>{station.name}</Popup>
-                  </Marker>
-                );
-              })}
+              {selectedStations}
               {/* 駅マーカー描画 */}
-              {props.routes
-                .filter((v) => v.id !== props.selectedRoute.id)
-                .flatMap((v) =>
-                  v.stations.map((station) => {
-                    const xy = GetLatLngFromDistance(
-                      v.points,
-                      station.distance,
-                    );
-                    if (Number.isNaN(xy[0])) xy[0] = 0;
-                    if (Number.isNaN(xy[1])) xy[1] = 0;
-                    return (
-                      <Marker
-                        key={`${v.id}_${station.id}`}
-                        position={toLatLng(xy)}
-                        icon={stationIcon}
-                      >
-                        <Popup>{station.name}</Popup>
-                      </Marker>
-                    );
-                  }),
-                )}
+              {stations}
+            </LayerGroup>
+          </LayersControl.Overlay>
+          <LayersControl.Overlay name="ポインター">
+            <LayerGroup>
+              <Marker
+                key={`pointer`}
+                position={toLatLng(pointerXY)}
+                icon={pointerIcon}
+              ></Marker>
             </LayerGroup>
           </LayersControl.Overlay>
         </LayersControl>

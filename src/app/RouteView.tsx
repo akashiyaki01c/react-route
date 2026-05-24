@@ -6,7 +6,7 @@ import { Polyline } from "react-leaflet";
 
 interface Props {
   routes: Route[];
-  selectedRoute: Route;
+  selectedRouteId: string;
 }
 
 export function RouteView(props: Props) {
@@ -14,7 +14,7 @@ export function RouteView(props: Props) {
     <>
       {/* 選択以外の路線描画 */}
       {props.routes
-        .filter((v) => v.id !== props.selectedRoute.id)
+        .filter((v) => v.id !== props.selectedRouteId)
         .map((route) => [
           route.points.map((point, index) => {
             if (index == 0) return <></>;
@@ -68,7 +68,7 @@ export function RouteView(props: Props) {
                   <Polyline
                     key={`${route.id}_line1`}
                     positions={line}
-                    color="red"
+                    color="black"
                   ></Polyline>
                 );
 
@@ -90,7 +90,7 @@ export function RouteView(props: Props) {
                 toLatLng(route.points[0].coord),
                 toLatLng(route.points[1].coord),
               ]}
-              color="red"
+              color="black"
             ></Polyline>
           ) : (
             <></>
@@ -109,7 +109,7 @@ export function RouteView(props: Props) {
                   ),
                 ),
               ]}
-              color="red"
+              color="black"
             ></Polyline>
           ) : (
             <></>
@@ -128,7 +128,7 @@ export function RouteView(props: Props) {
                   ),
                 ),
               ]}
-              color="red"
+              color="black"
             ></Polyline>
           ) : (
             <></>
@@ -162,7 +162,7 @@ export function RouteView(props: Props) {
                     ),
                   ),
                 ]}
-                color="red"
+                color="black"
               ></Polyline>
             );
           }),

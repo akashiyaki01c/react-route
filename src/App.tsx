@@ -20,11 +20,17 @@ import { StationEdit } from "./app/StationEdit";
 import { StateScheme } from "./model/state";
 import { CrossingEdit } from "./app/CrossingEdit";
 import { toGeoJSON } from "./geoJson";
+import { Vertical } from "./Vertical";
+import { GradientEdit } from "./app/GradientEdit";
+import { CulvertEdit } from "./app/CulvertEdit";
+import { StructureEdit } from "./app/StructureEdit";
 
 function App() {
   const { state, setState } = useRouteStore();
   const [selectedRoute, setSelectedRoute] = useState(state.routes[0]);
   const [fileHandle, setFileHandle] = useState(undefined);
+  const [pointerDistance, setPointerDistance] = useState(0);
+
   const getSelectedRoute = () => {
     if (state.routes.map((v) => v.id).includes(selectedRoute.id)) {
       return selectedRoute;
@@ -88,13 +94,25 @@ function App() {
       {/* 地図画面 */}
       <Grid w={"100dvw"} gap={0}>
         <Grid.Col span={8}>
-          <Map
-            mapClickHandler={MapClickHandler}
-            handleDragPoint={handleDragPoint}
-            handleAddPoint={handleAddPoint}
-            routes={state.routes}
-            selectedRoute={getSelectedRoute()}
-          />
+          <div style={{ width: "100%", height: "100dvh", overflow: "hidden" }}>
+            <div style={{ width: "100%", height: "50%", overflow: "scroll" }}>
+              <Map
+                mapClickHandler={MapClickHandler}
+                handleDragPoint={handleDragPoint}
+                handleAddPoint={handleAddPoint}
+                routes={state.routes}
+                selectedRoute={getSelectedRoute()}
+                pointerDistance={pointerDistance}
+              />
+            </div>
+            <div style={{ width: "100%", height: "50%", maxHeight: "50%", overflow: "scroll" }}>
+              <Vertical
+                selectedRoute={selectedRoute}
+                setPointerDistance={setPointerDistance}
+                pointerDistance={pointerDistance}
+              />
+            </div>
+          </div>
         </Grid.Col>
         <Grid.Col span={4}>
           {/* プロパティ画面 */}
@@ -139,6 +157,24 @@ function App() {
               setSelectedRoute={setSelectedRoute}
             />
             <CrossingEdit
+              routes={state.routes}
+              selectedRoute={getSelectedRoute()}
+              setState={setState}
+              setSelectedRoute={setSelectedRoute}
+            />
+            <CulvertEdit
+              routes={state.routes}
+              selectedRoute={getSelectedRoute()}
+              setState={setState}
+              setSelectedRoute={setSelectedRoute}
+            />
+            <GradientEdit
+              routes={state.routes}
+              selectedRoute={getSelectedRoute()}
+              setState={setState}
+              setSelectedRoute={setSelectedRoute}
+            />
+            <StructureEdit
               routes={state.routes}
               selectedRoute={getSelectedRoute()}
               setState={setState}

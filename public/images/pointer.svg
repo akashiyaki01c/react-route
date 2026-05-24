@@ -7,8 +7,8 @@
    viewBox="0 0 16 16"
    version="1.1"
    id="svg1"
-   sodipodi:docname="station-selected.svg"
    inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   sodipodi:docname="pointer.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -17,21 +17,22 @@
      id="namedview1"
      pagecolor="#ffffff"
      bordercolor="#000000"
-     borderopacity="0.25"
+     borderopacity="0.2"
      inkscape:showpageshadow="2"
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
+     inkscape:deskcolor="#ffffff"
+     inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="18.52896861"
-     inkscape:cx="6.341421506"
-     inkscape:cy="8.904974881"
-     inkscape:window-width="1616"
+     inkscape:zoom="24.07694803"
+     inkscape:cx="7.164529315"
+     inkscape:cy="8.431301165"
+     inkscape:window-width="1615"
      inkscape:window-height="991"
-     inkscape:window-x="64"
+     inkscape:window-x="65"
      inkscape:window-y="31"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg1">
+     inkscape:current-layer="layer1">
     <inkscape:grid
        id="grid1"
        units="px"
@@ -40,32 +41,38 @@
        spacingx="1"
        spacingy="1"
        empcolor="#0099e5"
-       empopacity="0.3019607843"
+       empopacity="0.6"
        color="#0099e5"
-       opacity="0.1490196078"
+       opacity="0.301961"
        empspacing="4"
-       enabled="true"
+       dotted="false"
+       gridanglex="30"
+       gridanglez="30"
        visible="true" />
   </sodipodi:namedview>
   <defs
      id="defs1" />
-  <circle
-     style="fill:white;stroke:#ef4444;stroke-width:1;stroke-dasharray:none"
-     id="path1"
-     cx="8"
-     cy="8"
-     r="6" />
-  <path
-     style="fill:#ef4444;stroke:none;stroke-width:2;stroke-dasharray:none"
-     id="path1-2"
-     sodipodi:type="arc"
-     sodipodi:cx="8"
-     sodipodi:cy="8"
-     sodipodi:rx="6"
-     sodipodi:ry="6"
-     sodipodi:start="1.570796327"
-     sodipodi:end="4.71238898"
-     sodipodi:open="true"
-     sodipodi:arc-type="arc"
-     d="M 8,14 A 6,6 0 0 1 2,8 6,6 0 0 1 8,2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <circle
+       style="fill:#ef4444;stroke:none"
+       id="path6"
+       cx="8"
+       cy="8"
+       r="8" />
+    <circle
+       style="fill:white;stroke:none"
+       id="path7"
+       cx="8"
+       cy="8"
+       r="7" />
+    <circle
+       style="fill:#ef4444;stroke:none"
+       id="path8"
+       cx="8"
+       cy="8"
+       r="6" />
+  </g>
 </svg>

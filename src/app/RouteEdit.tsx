@@ -1,5 +1,5 @@
 import { Button, Textarea, TextInput } from "@mantine/core";
-import { Route } from "../model/route";
+import { getDefaultRoute, Route } from "../model/route";
 import { State } from "../model/state";
 import { useRef, useState } from "react";
 
@@ -43,15 +43,7 @@ export function RouteEdit(props: Props) {
                   .map((v, i) => (v.id === props.selectedRoute.id ? i : null))
                   .find((v) => v != null) || 0;
               props.routes[currentIndex] = props.selectedRoute;
-              props.routes.push({
-                id: crypto.randomUUID(),
-                name: "新規路線",
-                points: [],
-                stations: [],
-                crossings: [],
-                culverts: [],
-                terrains: [],
-              });
+              props.routes.push(getDefaultRoute());
               props.setState({ routes: props.routes });
               props.setSelectedRoute(props.routes[props.routes.length - 1]);
             }}

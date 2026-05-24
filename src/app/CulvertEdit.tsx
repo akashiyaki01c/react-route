@@ -9,7 +9,7 @@ interface Props {
   setSelectedRoute: React.Dispatch<React.SetStateAction<Route>>;
 }
 
-export function CrossingEdit(props: Props) {
+export function CulvertEdit(props: Props) {
   return (
 	<div
 	  style={{
@@ -33,25 +33,25 @@ export function CrossingEdit(props: Props) {
 		  }}
 		>
 		  <span style={{ marginInline: "1ric", fontWeight: "bold" }}>
-			踏切管理
+			渠橋管理
 		  </span>
 		</div>
 		<div style={{ display: "flex", gap: "0.25em" }}>
 		  <Button
 			variant="white"
 			onClick={() => {
-			  props.selectedRoute.crossings = props.selectedRoute.crossings.sort(
+			  props.selectedRoute.culverts = props.selectedRoute.culverts.sort(
 				(a, b) => a.distance - b.distance,
 			  );
 			  props.setSelectedRoute({ ...props.selectedRoute });
 			}}
 		  >
-			踏切ソート
+			渠橋ソート
 		  </Button>
 		  <Button
 			variant="outline"
 			onClick={() => {
-			  props.selectedRoute.crossings.push({
+			  props.selectedRoute.culverts.push({
 				  id: crypto.randomUUID(),
 				  name: "",
 				  distance: 0
@@ -59,7 +59,7 @@ export function CrossingEdit(props: Props) {
 			  props.setSelectedRoute({ ...props.selectedRoute });
 			}}
 		  >
-			踏切追加
+			渠橋追加
 		  </Button>
 		</div>
 	  </div>
@@ -71,22 +71,22 @@ export function CrossingEdit(props: Props) {
 		  padding: "2.5%",
 		}}
 	  >
-		{props.selectedRoute.crossings.map((crossing, index) => (
+		{props.selectedRoute.culverts.map((culvert, index) => (
 		  <div
-			key={crossing.id}
+			key={culvert.id}
 			style={{ display: "flex", justifyContent: "space-between" }}
 		  >
 			<div style={{ display: "flex", gap: "0.5em" }}>
 			  <div
 				style={{ display: "flex", alignItems: "center", gap: "0.25em" }}
 			  >
-				踏切名
+				渠橋名
 				<TextInput
 				  style={{ width: "6ric" }}
 				  type="text"
-				  value={crossing.name}
+				  value={culvert.name}
 				  onChange={(e) => {
-					crossing.name = e.target.value;
+					culvert.name = e.target.value;
 					props.setSelectedRoute(structuredClone(props.selectedRoute));
 				  }}
 				/>
@@ -97,9 +97,9 @@ export function CrossingEdit(props: Props) {
 				距離程
 				<NumberInput
 				  style={{ width: "6ric" }}
-				  value={crossing.distance}
+				  value={culvert.distance}
 				  onValueChange={(e) => {
-					crossing.distance = Number.parseInt(e.formattedValue) || 0;
+					culvert.distance = Number.parseInt(e.formattedValue) || 0;
 					props.setSelectedRoute(structuredClone(props.selectedRoute));
 				  }}
 				/>
@@ -109,8 +109,8 @@ export function CrossingEdit(props: Props) {
 			<Button
 			  variant="outline"
 			  onClick={() => {
-				props.selectedRoute.crossings =
-				  props.selectedRoute.crossings.filter((_, i) => i !== index);
+				props.selectedRoute.culverts =
+				  props.selectedRoute.culverts.filter((_, i) => i !== index);
 				props.setSelectedRoute(structuredClone(props.selectedRoute));
 			  }}
 			>
