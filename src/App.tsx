@@ -27,7 +27,7 @@ import { StructureEdit } from "./app/StructureEdit";
 
 function App() {
   const { state, setState, loadState, selectedRouteId } = useRouteStore();
-  const [fileHandle, setFileHandle] = useState(undefined);
+  const [fileHandle, setFileHandle] = useState<FileSystemFileHandle | undefined>(undefined);
   const [pointerDistance, setPointerDistance] = useState(0);
 
   const updateSelectedRoute = (updater: (route: Route) => Route) => {
@@ -188,9 +188,12 @@ function App() {
                             },
                           ],
                         });
+                        if (!handle) {
+                          return;
+                        }
                         setFileHandle(handle);
                       }
-                      const writable = await fileHandle.createWritable();
+                      const writable = await fileHandle!.createWritable();
                       await writable.write(JSON.stringify(state, null, 2));
                       await writable.close();
                       console.log("saved");
