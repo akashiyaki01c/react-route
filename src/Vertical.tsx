@@ -123,7 +123,7 @@ export function Vertical({ pointerDistance, setPointerDistance }: Props) {
   const lowerZ = useMemo(
     () =>
       roundDownMultiple(
-        selectedRoute.terrains.reduce(
+        selectedRoute.terrains.filter(v => v.z !== -9999).reduce(
           (p, c) => Math.min(p, c.z),
           Number.MAX_VALUE,
         ) || 0,
@@ -134,7 +134,7 @@ export function Vertical({ pointerDistance, setPointerDistance }: Props) {
   const higherZ = useMemo(
     () =>
       roundUpMultiple(
-        selectedRoute.terrains.reduce(
+        selectedRoute.terrains.filter(v => v.z !== -9999).reduce(
           (p, c) => Math.max(p, c.z),
           Number.MIN_VALUE,
         ) || 0,
